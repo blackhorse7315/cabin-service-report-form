@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cabin Service Duty Report</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom styles for smoother transitions */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Hide scrollbar for horizontal nav but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
+
+    <!-- Top Header -->
+    <header class="bg-white shadow-sm px-6 py-3 flex items-center justify-between z-20 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 bg-blue-50 rounded-lg">
+                <i data-lucide="plane" class="w-6 h-6 text-blue-600"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wider text-slate-800 leading-tight">AeroDuty<span class="text-blue-600">.</span></h1>
+                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold hidden sm:block">Cabin Service System</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-6">
+            <!-- Dynamic Page Title (Breadcrumb style) -->
+            <div class="hidden md:flex items-center space-x-2 text-sm">
+                <span class="text-slate-400">Pages</span>
+                <span class="text-slate-400">/</span>
+                <span id="page-title" class="font-semibold text-blue-600">Dashboard</span>
+            </div>
+            
+            <div class="h-8 w-px bg-gray-200 hidden md:block"></div>
+            
+            <!-- User Profile -->
+            <div class="flex items-center space-x-3">
+                <button type="button" onclick="requireAdminAccess()" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Admin Panel">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-semibold text-gray-800 leading-none mb-1">Administrator</p>
+                    <p class="text-xs text-gray-500 leading-none">Duty Manager</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-slate-900 border-2 border-blue-100 flex items-center justify-center text-white font-bold shadow-sm">
+                    A
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Horizontal Navigation Menu -->
+    <nav class="bg-slate-900 shadow-md shrink-0 z-10 relative">
+        <div class="flex items-center px-4 py-2 space-x-2 overflow-x-auto no-scrollbar">
+            <!-- Main Reports Menus -->
+            <div class="flex items-center space-x-1 pr-4 border-r border-slate-700">
+                <a href="#" onclick="switchTab('dashboard')" class="nav-link flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap bg-slate-800 text-blue-400" id="nav-dashboard">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">Dashboard</span>
+                </a>
+                <a href="#" onclick="switchTab('add-report')" class="nav-link flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap text-slate-300" id="nav-add-report">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">Add New Report</span>
+                </a>
+                <a href="#" onclick="switchTab('history')" class="nav-link flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap text-slate-300" id="nav-history">
+                    <i data-lucide="history" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">Report History</span>
+                </a>
+            </div>
+
+            <!-- Database Menus -->
+            <div class="flex items-center space-x-1 pl-2">
+                <div class="flex items-center px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:block">
+                    Databases:
+                </div>
+                <a href="#" onclick="switchTab('db-passenger')" class="nav-link flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap text-slate-300" id="nav-db-passenger">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span class="text-sm font-medium">Passengers</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50/50 relative">
+        
+        <!-- Notifikasi Container -->
+        <div id="toast-container" class="fixed top-32 right-8 z-50"></div>
+
+        <!-- ================= DASHBOARD ================= -->
+        <div id="dashboard" class="tab-content active">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Stat Cards -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium mb-1">Total Reports</p>
+                                <p class="text-3xl font-bold text-gray-800" id="stat-reports">0</p>
+                            </div>
+                            <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="file-check-2" class="w-6 h-6"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium mb-1">Cabin Crew</p>
+                                <p class="text-3xl font-bold text-gray-800" id="stat-crew">0</p>
+                            </div>
+                            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i data-lucide="users" class="w-6 h-6"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium mb-1">Aircrafts DB</p>
+                                <p class="text-3xl font-bold text-gray-800" id="stat-aircrafts">0</p>
+                            </div>
+                            <div class="p-3 bg-purple-50 text-purple-600 rounded-xl"><i data-lucide="plane" class="w-6 h-6"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium mb-1">Passengers DB</p>
+                                <p class="text-3xl font-bold text-gray-800" id="stat-passengers">0</p>
+                            </div>
+                            <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="users-round" class="w-6 h-6"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
+                        <h3 class="text-lg font-semibold text-gray-800">Recent Duty Reports</h3>
+                        <button onclick="switchTab('history')" class="text-sm text-blue-600 font-medium hover:text-blue-800">View All</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-600">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50/50">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Date</th>
+                                    <th class="px-6 py-4 font-semibold">Cabin Crew</th>
+                                    <th class="px-6 py-4 font-semibold">Aircraft</th>
+                                    <th class="px-6 py-4 font-semibold">Route</th>
+                                    <th class="px-6 py-4 font-semibold">Duration (Days)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-recent-table" class="divide-y divide-gray-50">
+                                <!-- Data injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ADD NEW REPORT ================= -->
+        <div id="add-report" class="tab-content max-w-4xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 md:px-8 py-5 border-b border-gray-100 bg-gray-50/50 flex items-center space-x-3">
+                    <div class="p-2 bg-blue-100 rounded-lg text-blue-600"><i data-lucide="file-plus-2" class="w-5 h-5"></i></div>
+                    <h2 class="text-lg font-semibold text-gray-800">Create Duty Report</h2>
+                </div>
+                
+                <div class="p-6 md:p-8">
+                    <form id="form-new-report" onsubmit="handleNewReportSubmit(event)">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            
+                            <!-- Section: Crew & Time -->
+                            <div class="col-span-1 md:col-span-2">
+                                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 pb-2 border-b">Duty Information</h3>
+                            </div>
+
+                            <div class="col-span-1 md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Name (Cabin Service)</label>
+                                <select id="report-cabin-name" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors cursor-pointer outline-none">
+                                    <option value="">-- Select Cabin Crew --</option>
+                                    <!-- Injected via JS -->
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Duty</label>
+                                <input type="datetime-local" id="report-start-duty" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors outline-none cursor-pointer">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Duty</label>
+                                <input type="datetime-local" id="report-end-duty" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors outline-none cursor-pointer">
+                            </div>
+
+                            <div class="col-span-1 md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Duty Duration <span class="text-xs font-normal text-gray-400">(Otomatis: Hari pertama terhitung)</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i data-lucide="calendar" class="h-5 w-5 text-gray-400"></i>
+                                    </div>
+                                    <input type="text" id="report-duration" readonly placeholder="0 Hari" class="w-full rounded-xl border-gray-200 border p-3 pl-10 bg-slate-50 text-emerald-600 font-semibold cursor-not-allowed">
+                                </div>
+                            </div>
+
+                            <!-- Section: Flight Details -->
+                            <div class="col-span-1 md:col-span-2 mt-4">
+                                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 pb-2 border-b">Flight Details</h3>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Aircraft Registration</label>
+                                <select id="report-aircraft" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors outline-none cursor-pointer">
+                                    <option value="">-- Select Aircraft --</option>
+                                    <!-- Injected via JS -->
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Route</label>
+                                <input type="text" id="report-route" required placeholder="e.g. CGK - DPS - CGK" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors outline-none uppercase">
+                            </div>
+
+                            <!-- Penumpang Section -->
+                            <div class="col-span-1 md:col-span-2 mt-2 p-5 bg-gray-50 border border-gray-200 rounded-xl">
+                                <div class="flex justify-between items-center mb-3">
+                                    <label class="block text-sm font-medium text-gray-800">Passenger Manifest</label>
+                                    <button type="button" onclick="openPaxSelectorModal()" class="flex items-center text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors border border-blue-200 shadow-sm">
+                                        <i data-lucide="user-plus" class="w-4 h-4 mr-1"></i> Add Passenger
+                                    </button>
+                                </div>
+                                
+                                <!-- Display selected passengers -->
+                                <div id="selected-passengers-display" class="flex flex-wrap gap-2 mb-3 min-h-[40px] items-center text-sm text-gray-500 italic">
+                                    Belum ada penumpang yang dipilih. Klik "Add Passenger" dari database.
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Passenger</label>
+                                    <input type="number" id="report-total-pax" required min="0" placeholder="0" class="w-full max-w-[200px] rounded-lg border-gray-300 border p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <p class="text-xs text-gray-400 mt-1">Otomatis terisi saat memilih penumpang, bisa diubah manual jika ada bayi/penumpang lain.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Section: Additional Remarks & Details (Baru ditambahkan) -->
+                            <div class="col-span-1 md:col-span-2 mt-4">
+                                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 pb-2 border-b">Additional Remarks & Details</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    
+                                    <!-- Pax Remarks -->
+                                    <div class="space-y-4">
+                                        <label class="block text-sm font-medium text-gray-700 border-b pb-1">Pax Remarks</label>
+                                        <div>
+                                            <input type="text" id="report-remark-before" placeholder="Before Flight" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <input type="text" id="report-remark-during" placeholder="During Flight" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <input type="text" id="report-remark-after" placeholder="After Flight" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        </div>
+                                    </div>
+
+                                    <!-- F&B Restrictions -->
+                                    <div class="space-y-4">
+                                        <label class="block text-sm font-medium text-gray-700 border-b pb-1">F&B Preferences</label>
+                                        <div>
+                                            <input type="text" id="report-food-res" placeholder="Food Restriction" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <input type="text" id="report-bev-res" placeholder="Beverage Restriction" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <input type="text" id="report-fav-food" placeholder="Favorite Foods" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <input type="text" id="report-fav-bev" placeholder="Favorite Beverage" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Present Condition</label>
+                                        <input type="text" id="report-present-cond" placeholder="Present Condition" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Conclusion</label>
+                                        <input type="text" id="report-present-concl" placeholder="Conclusion" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Allowance & Transport</label>
+                                        <select id="report-allowance" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                            <option value="Recieved Completed">Recieved Completed</option>
+                                            <option value="Recieved Not Completed">Recieved Not Completed</option>
+                                            <option value="Not Recieved">Not Recieved</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Add Image Documentation</label>
+                                        <select id="report-doc-position" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white mb-2 cursor-pointer">
+                                            <option value="">-- Select Position --</option>
+                                            <!-- Injected via JS -->
+                                        </select>
+                                        <p class="text-[11px] text-amber-600 mb-2 flex items-center"><i data-lucide="info" class="w-3 h-3 mr-1"></i> Foto dianjurkan dalam format landscape</p>
+                                        <input type="file" id="report-upload-image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="flex items-center justify-end mt-10 pt-6 border-t border-gray-100">
+                            <button type="button" onclick="resetForm()" class="px-6 py-2.5 rounded-xl text-gray-600 font-medium hover:bg-gray-100 transition-colors mr-3">
+                                Clear
+                            </button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-8 rounded-xl transition-colors flex items-center shadow-md shadow-blue-500/30">
+                                <i data-lucide="send" class="w-4 h-4 mr-2"></i> Submit Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= REPORT HISTORY ================= -->
+        <div id="history" class="tab-content max-w-7xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-5 border-b border-gray-100 flex items-center space-x-3 bg-gray-50/50">
+                    <div class="p-2 bg-slate-100 rounded-lg text-slate-600"><i data-lucide="history" class="w-5 h-5"></i></div>
+                    <h2 class="text-lg font-semibold text-gray-800">All Duty Reports</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600 whitespace-nowrap">
+                        <thead class="text-xs text-gray-500 uppercase bg-white border-b border-gray-100">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Cabin Crew</th>
+                                <th class="px-6 py-4 font-semibold">Aircraft / Route</th>
+                                <th class="px-6 py-4 font-semibold">Duty Schedule</th>
+                                <th class="px-6 py-4 font-semibold">Duration (Days)</th>
+                                <th class="px-6 py-4 font-semibold text-center">Pax</th>
+                                <th class="px-6 py-4 font-semibold text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body" class="divide-y divide-gray-50">
+                            <!-- Data injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Empty state -->
+                <div id="history-empty" class="hidden flex flex-col items-center justify-center py-16 bg-white">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <i data-lucide="inbox" class="w-10 h-10 text-gray-300"></i>
+                    </div>
+                    <p class="text-gray-500 font-medium">Belum ada riwayat laporan.</p>
+                    <p class="text-sm text-gray-400 mt-1">Laporan yang Anda submit akan muncul di sini.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PASSENGER DATABASE ================= -->
+        <div id="db-passenger" class="tab-content max-w-5xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6 relative overflow-hidden">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-amber-50 rounded-bl-full opacity-50 z-0"></div>
+                <div class="relative z-10">
+                    <h3 class="text-lg font-semibold mb-6 flex items-center"><i data-lucide="user-plus" class="w-5 h-5 mr-2 text-amber-600"></i> Tambah Data Penumpang</h3>
+                    <form onsubmit="handleAddPassenger(event)" class="flex flex-col md:flex-row gap-4 items-end">
+                        <div class="w-full md:w-1/4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Sex</label>
+                            <select id="new-pax-sex" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-amber-500 outline-none bg-white cursor-pointer">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Male Child">Male Child</option>
+                                <option value="Female Child">Female Child</option>
+                                <option value="Male Infant">Male Infant</option>
+                                <option value="Female Infant">Female Infant</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 w-full relative">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Name Passenger</label>
+                            <div class="relative">
+                                <span id="pax-title-preview" class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 font-medium">Mr.</span>
+                                <input type="text" id="new-pax-name" required placeholder="Nama Lengkap" class="w-full rounded-xl border-gray-200 border p-3 pl-14 focus:ring-2 focus:ring-amber-500 outline-none">
+                            </div>
+                        </div>
+                        <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-8 rounded-xl transition-colors whitespace-nowrap w-full md:w-auto shadow-md">
+                            Tambah Data
+                        </button>
+                    </form>
+                    <div class="mt-4 flex items-center p-3 bg-amber-50/50 rounded-lg text-xs text-amber-700">
+                        <i data-lucide="info" class="w-4 h-4 mr-2 shrink-0"></i>
+                        Sistem akan otomatis menambahkan title "Mr.", "Mrs.", atau "Ms." di depan nama berdasarkan pilihan Sex.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <h3 class="font-semibold text-gray-800">Daftar Penumpang</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="text-xs text-gray-500 uppercase bg-white border-b">
+                            <tr>
+                                <th class="px-6 py-4 w-16">No</th>
+                                <th class="px-6 py-4">Full Name (with Title)</th>
+                                <th class="px-6 py-4">Sex</th>
+                                <th class="px-6 py-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-passenger-table" class="divide-y divide-gray-50">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ADMIN PANEL ================= -->
+        <div id="admin-panel" class="tab-content max-w-5xl mx-auto pb-10">
+            <!-- Email Management -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4 px-2">
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center"><i data-lucide="shield" class="w-6 h-6 mr-2 text-slate-700"></i> Admin Dashboard</h2>
+                    <button type="button" onclick="logoutAdmin()" class="text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Logout Admin
+                    </button>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-32 h-32 bg-slate-100 rounded-bl-full opacity-50 z-0"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-lg font-semibold flex items-center"><i data-lucide="mail" class="w-5 h-5 mr-2 text-slate-600"></i> Email Management</h3>
+                            <span id="email-count-badge" class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">0/10 Emails</span>
+                        </div>
+                        <form onsubmit="handleEmailSubmit(event)" class="flex flex-col md:flex-row gap-4 items-end">
+                            <input type="hidden" id="edit-email-id" value="">
+                            <div class="flex-1 w-full">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                <input type="text" id="admin-email-name" required placeholder="Nama Pemilik Email" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-slate-500 outline-none">
+                            </div>
+                            <div class="flex-1 w-full">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                                <input type="email" id="admin-email-address" required placeholder="contoh@maskapai.com" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-slate-500 outline-none">
+                            </div>
+                            <div class="flex space-x-2 w-full md:w-auto">
+                                <button type="button" id="btn-cancel-edit" onclick="cancelEditEmail()" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-xl transition-colors whitespace-nowrap shadow-sm">
+                                    Batal
+                                </button>
+                                <button type="submit" id="btn-submit-email" class="bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-8 rounded-xl transition-colors whitespace-nowrap w-full md:w-auto shadow-md">
+                                    Tambah Email
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <h3 class="font-semibold text-gray-800">Daftar Email Penerima</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="text-xs text-gray-500 uppercase bg-white border-b">
+                            <tr>
+                                <th class="px-6 py-4 w-16">No</th>
+                                <th class="px-6 py-4">Name</th>
+                                <th class="px-6 py-4">Email Address</th>
+                                <th class="px-6 py-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-email-table" class="divide-y divide-gray-50">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Cabin Crew Management -->
+            <div class="mt-12 mb-8">
+                <div class="flex items-center mb-4 px-2">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center"><i data-lucide="user-circle" class="w-5 h-5 mr-2 text-blue-600"></i> Cabin Crew Database</h3>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-32 h-32 bg-blue-50 rounded-bl-full opacity-50 z-0"></div>
+                    <div class="relative z-10">
+                        <h3 class="text-base font-semibold mb-6 flex items-center"><i data-lucide="user-plus" class="w-5 h-5 mr-2 text-blue-600"></i> Tambah Data Kabin Baru</h3>
+                        <form onsubmit="handleAddCabin(event)" class="flex flex-col gap-4">
+                            <input type="hidden" id="edit-cabin-id" value="">
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <div class="flex-1 w-full">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                                    <input type="text" id="new-cabin-name" required placeholder="Nama Lengkap" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div class="flex-1 w-full">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                                    <input type="email" id="new-cabin-email" required placeholder="crew@maskapai.com" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div class="flex-1 w-full">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Signature (URL)</label>
+                                    <input type="url" id="new-cabin-sign" required placeholder="https://example.com/sign.png" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 w-full justify-end mt-2">
+                                <button type="button" id="btn-cancel-cabin" onclick="cancelEditCabin()" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-xl transition-colors whitespace-nowrap shadow-sm">
+                                    Batal
+                                </button>
+                                <button type="submit" id="btn-submit-cabin" class="bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-8 rounded-xl transition-colors whitespace-nowrap w-full md:w-auto shadow-md">
+                                    Tambah Data
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="font-semibold text-gray-800">Daftar Cabin Service</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-600">
+                            <thead class="text-xs text-gray-500 uppercase bg-white border-b">
+                                <tr>
+                                    <th class="px-6 py-4 w-16">No</th>
+                                    <th class="px-6 py-4">Name</th>
+                                    <th class="px-6 py-4">Email</th>
+                                    <th class="px-6 py-4">Sign URL</th>
+                                    <th class="px-6 py-4 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="db-cabin-table" class="divide-y divide-gray-50">
+                                <!-- Injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aircraft Management -->
+            <div class="mt-12 mb-8">
+                <div class="flex items-center mb-4 px-2">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center"><i data-lucide="plane-takeoff" class="w-5 h-5 mr-2 text-purple-600"></i> Aircrafts Database</h3>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-32 h-32 bg-purple-50 rounded-bl-full opacity-50 z-0"></div>
+                    <div class="relative z-10">
+                        <h3 class="text-base font-semibold mb-6 flex items-center"><i data-lucide="plane" class="w-5 h-5 mr-2 text-purple-600"></i> Tambah Data Pesawat</h3>
+                        <form onsubmit="handleAddAircraft(event)" class="flex flex-col md:flex-row gap-4 items-end">
+                            <input type="hidden" id="edit-ac-id" value="">
+                            <div class="flex-1 w-full">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Registration</label>
+                                <input type="text" id="new-ac-reg" required placeholder="e.g. PK-GIA" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-purple-500 outline-none uppercase">
+                            </div>
+                            <div class="flex-1 w-full">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Aircraft Type</label>
+                                <input type="text" id="new-ac-type" required placeholder="e.g. Boeing 777-300ER" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-purple-500 outline-none">
+                            </div>
+                            <div class="flex space-x-2 w-full md:w-auto">
+                                <button type="button" id="btn-cancel-ac" onclick="cancelEditAircraft()" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-xl transition-colors whitespace-nowrap shadow-sm">
+                                    Batal
+                                </button>
+                                <button type="submit" id="btn-submit-ac" class="bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-8 rounded-xl transition-colors whitespace-nowrap w-full md:w-auto shadow-md">
+                                    Tambah Data
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="font-semibold text-gray-800">Daftar Armada Pesawat</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-600">
+                            <thead class="text-xs text-gray-500 uppercase bg-white border-b">
+                                <tr>
+                                    <th class="px-6 py-4 w-16">No</th>
+                                    <th class="px-6 py-4">Registration</th>
+                                    <th class="px-6 py-4">Type</th>
+                                    <th class="px-6 py-4 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="db-aircraft-table" class="divide-y divide-gray-50">
+                                <!-- Injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cabin Condition Management -->
+            <div class="mt-12">
+                <div class="flex items-center mb-4 px-2">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center"><i data-lucide="layout-grid" class="w-5 h-5 mr-2 text-emerald-600"></i> Cabin Condition Database</h3>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-bl-full opacity-50 z-0"></div>
+                    <div class="relative z-10">
+                        <h3 class="text-base font-semibold mb-6 flex items-center"><i data-lucide="plus-circle" class="w-5 h-5 mr-2 text-emerald-600"></i> Tambah Item Kondisi Kabin</h3>
+                        <form onsubmit="handleAddCabinCondition(event)" class="flex flex-col md:flex-row gap-4 items-end">
+                            <input type="hidden" id="edit-cond-id" value="">
+                            <div class="flex-1 w-full">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Item Name / Position</label>
+                                <input type="text" id="new-cond-item" required placeholder="e.g. Galley Forward" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            </div>
+                            <div class="flex space-x-2 w-full md:w-auto">
+                                <button type="button" id="btn-cancel-cond" onclick="cancelEditCabinCondition()" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-xl transition-colors whitespace-nowrap shadow-sm">
+                                    Batal
+                                </button>
+                                <button type="submit" id="btn-submit-cond" class="bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-8 rounded-xl transition-colors whitespace-nowrap w-full md:w-auto shadow-md">
+                                    Tambah Item
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="font-semibold text-gray-800">Daftar Item Kondisi Kabin</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-600">
+                            <thead class="text-xs text-gray-500 uppercase bg-white border-b">
+                                <tr>
+                                    <th class="px-6 py-4 w-16">No</th>
+                                    <th class="px-6 py-4">Item Name</th>
+                                    <th class="px-6 py-4 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="db-condition-table" class="divide-y divide-gray-50">
+                                <!-- Injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= MODALS ================= -->
+        
+        <!-- Modal for Admin Login -->
+        <div id="admin-login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm transform transition-all scale-100 overflow-hidden">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800 flex items-center"><i data-lucide="lock" class="w-5 h-5 mr-2 text-slate-600"></i> Admin Access</h3>
+                    <button type="button" onclick="closeAdminLogin()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form onsubmit="handleAdminLogin(event)">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <input type="text" id="admin-user-input" required class="w-full rounded-xl border-gray-300 border p-2.5 focus:ring-2 focus:ring-slate-500 outline-none">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" id="admin-pass-input" required class="w-full rounded-xl border-gray-300 border p-2.5 focus:ring-2 focus:ring-slate-500 outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2.5 px-4 rounded-xl transition-colors shadow-md">
+                            Login Admin
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Passenger Database Selection -->
+        <div id="pax-selector-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col h-[85vh] md:h-[600px] transform transition-all scale-100 overflow-hidden">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800 flex items-center"><i data-lucide="users" class="w-5 h-5 mr-2 text-blue-600"></i> Passenger Database</h3>
+                    <button type="button" onclick="closePaxSelectorModal()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <!-- Search bar & Quick Add -->
+                <div class="p-4 border-b border-gray-100 flex flex-col space-y-3 bg-white">
+                    <div class="flex justify-between items-center gap-2">
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
+                            <input type="text" id="pax-search-input" onkeyup="filterPaxList()" placeholder="Cari nama penumpang..." class="w-full rounded-xl border border-gray-300 p-2 pl-9 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        <button type="button" onclick="toggleQuickAddPax()" class="bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 px-3 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center shadow-sm">
+                            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> Baru
+                        </button>
+                    </div>
+
+                    <!-- Quick Add Form (Hidden by default) -->
+                    <div id="quick-add-pax-form" class="hidden bg-amber-50/50 border border-amber-100 rounded-xl p-3 transition-all">
+                        <p class="text-xs font-semibold text-amber-800 mb-2">Tambah Penumpang Cepat</p>
+                        <form onsubmit="handleQuickAddPassenger(event)" class="flex flex-col sm:flex-row gap-2 items-end">
+                            <div class="w-full sm:w-1/3">
+                                <label class="block text-[10px] uppercase tracking-wider font-semibold text-gray-600 mb-1">Sex</label>
+                                <select id="quick-pax-sex" required class="w-full rounded-lg border-gray-300 border p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white cursor-pointer">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Male Child">Male Child</option>
+                                    <option value="Female Child">Female Child</option>
+                                    <option value="Male Infant">Male Infant</option>
+                                    <option value="Female Infant">Female Infant</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 w-full">
+                                <label class="block text-[10px] uppercase tracking-wider font-semibold text-gray-600 mb-1">Name</label>
+                                <input type="text" id="quick-pax-name" required placeholder="Nama Lengkap" class="w-full rounded-lg border-gray-300 border p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                            </div>
+                            <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors whitespace-nowrap shadow-sm w-full sm:w-auto">
+                                Simpan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Scrollable List of Passengers -->
+                <div class="flex-1 overflow-y-auto p-4 bg-gray-50/50" id="pax-selector-list">
+                    <!-- Checkboxes injected via JS -->
+                </div>
+
+                <!-- Footer with Add button -->
+                <div class="p-4 border-t border-gray-100 bg-white flex justify-end">
+                    <button type="button" onclick="confirmPaxSelection()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-xl transition-colors flex items-center shadow-md">
+                        <i data-lucide="check-circle" class="w-4 h-4 mr-2"></i> Add to Form
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Report Details -->
+        <div id="detail-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4 transform transition-all scale-100">
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white/90 backdrop-blur z-10">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center"><i data-lucide="file-text" class="w-5 h-5 mr-2 text-blue-600"></i> Detail Laporan</h3>
+                    <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="p-6 md:p-8" id="modal-content">
+                    <!-- Content injected dynamically -->
+                </div>
+                <div class="p-6 border-t border-gray-100 flex justify-end bg-gray-50">
+                    <button type="button" onclick="closeModal()" class="px-6 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors shadow-sm">Tutup Laporan</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // ================= DECLARATIONS =================
+        let isAdminLoggedIn = false;
+        let currentSelectedPax = []; 
+
+        const pageTitles = {
+            'dashboard': 'Dashboard Overview',
+            'add-report': 'Create Duty Report',
+            'history': 'Report History',
+            'db-passenger': 'Passengers DB',
+            'admin-panel': 'Admin Dashboard & System Databases'
+        };
+
+        // ================= STATE MANAGEMENT =================
+        const defaultState = {
+            reports: [],
+            cabinCrew: [
+                { id: 1, name: "Sarah Jenkins", email: "sarah.j@aeroduty.com", signUrl: "https://example.com/sign-sarah.png" },
+                { id: 2, name: "Budi Santoso", email: "budi.s@aeroduty.com", signUrl: "https://example.com/sign-budi.png" }
+            ],
+            aircrafts: [
+                { id: 1, reg: "PK-GIA", type: "Boeing 777-300ER" },
+                { id: 2, reg: "PK-GHC", type: "Airbus A330-300" }
+            ],
+            passengers: [
+                { id: 1, name: "Mr. John Doe", sex: "Male" },
+                { id: 2, name: "Mrs. Jane Smith", sex: "Female" },
+                { id: 3, name: "Mr. Michael Brown", sex: "Male" },
+                { id: 4, name: "Mrs. Emily Davis", sex: "Female" }
+            ],
+            emails: [],
+            cabinConditions: [
+                { id: 1, item: "Galley Forward" },
+                { id: 2, item: "Lavatory A" }
+            ]
+        };
+
+        let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
+        if (!appState) {
+            appState = defaultState;
+            saveState();
+        }
+        
+        // Kompatibilitas untuk state lama yang belum punya array baru
+        if (!appState.emails) appState.emails = [];
+        if (!appState.cabinConditions) appState.cabinConditions = [];
+        saveState();
+
+        function saveState() {
+            localStorage.setItem('aeroDutyState3', JSON.stringify(appState));
+            // Ensure DOM is fully loaded before trying to update UI elements
+            if(document.getElementById('stat-reports')) {
+                updateDashboardStats();
+            }
+            if(document.getElementById('report-cabin-name')) {
+                renderAllDropdowns();
+            }
+        }
+
+        // ================= INITIALIZATION =================
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            switchTab('dashboard'); // Default tab
+            setupEventListeners();
+            updateDashboardStats();
+            renderAllDropdowns();
+            renderAllTables();
+        });
+
+        // ================= NAVIGATION LOGIC =================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            const titleEl = document.getElementById('page-title');
+            if(titleEl) titleEl.innerText = pageTitles[tabId] || 'Pages';
+
+            document.querySelectorAll('.nav-link').forEach(el => {
+                el.classList.remove('bg-slate-800', 'text-blue-400');
+                el.classList.add('text-slate-300');
+            });
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-slate-300');
+                activeNav.classList.add('bg-slate-800', 'text-blue-400');
+            }
+
+            if (tabId === 'history') renderHistoryTable();
+            if (tabId === 'dashboard') updateDashboardStats();
+        }
+
+        // ================= UI HELPERS =================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-emerald-500' : 'bg-red-500';
+            const icon = type === 'success' ? 'check-circle' : 'alert-circle';
+            
+            toast.className = `${bgColor} text-white px-5 py-3.5 rounded-xl shadow-lg flex items-center space-x-3 mb-3 transform transition-all duration-300 translate-x-full opacity-0 font-medium z-[200] relative`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            lucide.createIcons({root: toast});
+
+            setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleString('id-ID', { 
+                day: '2-digit', month: 'short', year: 'numeric', 
+                hour: '2-digit', minute:'2-digit'
+            }).replace(/\./g, ':');
+        }
+
+        function formatDateOnly(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        // ================= EVENT LISTENERS & DURASI =================
+        function setupEventListeners() {
+            // Perhitungan Durasi Hari (Hari pertama terhitung)
+            const startInput = document.getElementById('report-start-duty');
+            const endInput = document.getElementById('report-end-duty');
+            
+            const calcDuration = () => {
+                if (startInput.value && endInput.value) {
+                    const start = new Date(startInput.value);
+                    const end = new Date(endInput.value);
+                    
+                    // Reset jam ke 00:00 untuk mengukur murni selisih hari di kalender
+                    start.setHours(0,0,0,0);
+                    end.setHours(0,0,0,0);
+                    
+                    if (end >= start) {
+                        const diffTime = Math.abs(end - start);
+                        // Ditambah 1 karena hari pertama tugas dihitung
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        document.getElementById('report-duration').value = `${diffDays} Hari`;
+                    } else {
+                        document.getElementById('report-duration').value = "Tgl Selesai harus >= Mulai";
+                    }
+                } else {
+                    document.getElementById('report-duration').value = "";
+                }
+            };
+
+            startInput.addEventListener('change', calcDuration);
+            endInput.addEventListener('change', calcDuration);
+
+            // Title prefix for passenger
+            const sexSelect = document.getElementById('new-pax-sex');
+            const titlePreview = document.getElementById('pax-title-preview');
+            
+            sexSelect.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (val === 'Male' || val === 'Male Child' || val === 'Male Infant') {
+                    titlePreview.innerText = 'Mr.';
+                } else if (val === 'Female Child' || val === 'Female Infant') {
+                    titlePreview.innerText = 'Ms.';
+                } else {
+                    titlePreview.innerText = 'Mrs.';
+                }
+            });
+        }
+
+        // ================= PASSENGER SELECTOR MODAL LOGIC =================
+        function openPaxSelectorModal() {
+            document.getElementById('pax-search-input').value = '';
+            renderPaxSelectorList('');
+            document.getElementById('pax-selector-modal').classList.remove('hidden');
+        }
+
+        function closePaxSelectorModal() {
+            document.getElementById('pax-selector-modal').classList.add('hidden');
+        }
+
+        function filterPaxList() {
+            const query = document.getElementById('pax-search-input').value.toLowerCase();
+            renderPaxSelectorList(query);
+        }
+
+        function renderPaxSelectorList(filterQuery = '') {
+            const listContainer = document.getElementById('pax-selector-list');
+            listContainer.innerHTML = '';
+
+            const filteredPax = appState.passengers.filter(p => p.name.toLowerCase().includes(filterQuery));
+            
+            if (filteredPax.length === 0) {
+                listContainer.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-4">Penumpang tidak ditemukan di database.</p>';
+                return;
+            }
+
+            filteredPax.forEach(p => {
+                const isChecked = currentSelectedPax.includes(p.name) ? 'checked' : '';
+                const item = document.createElement('label');
+                item.className = "flex items-center p-3 mb-2 bg-white border border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors";
+                item.innerHTML = `
+                    <input type="checkbox" value="${p.name}" class="pax-checkbox w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3" ${isChecked}>
+                    <div class="flex flex-col">
+                        <span class="font-semibold text-gray-800 text-sm">${p.name}</span>
+                        <span class="text-xs text-gray-500">${p.sex}</span>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function confirmPaxSelection() {
+            // Ambil semua checkbox yang dicentang
+            const checkboxes = document.querySelectorAll('.pax-checkbox:checked');
+            currentSelectedPax = Array.from(checkboxes).map(cb => cb.value);
+            
+            updateSelectedPaxDisplay();
+            
+            // Auto isi total passenger (pengguna masih bisa mengeditnya manual)
+            document.getElementById('report-total-pax').value = currentSelectedPax.length;
+
+            closePaxSelectorModal();
+        }
+
+        function updateSelectedPaxDisplay() {
+            const display = document.getElementById('selected-passengers-display');
+            if (currentSelectedPax.length === 0) {
+                display.innerHTML = 'Belum ada penumpang yang dipilih. Klik "Add Passenger" dari database.';
+                display.classList.add('text-gray-500', 'italic');
+                return;
+            }
+            
+            display.classList.remove('text-gray-500', 'italic');
+            display.innerHTML = currentSelectedPax.map(p => 
+                `<span class="inline-flex items-center bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-blue-200">
+                    <i data-lucide="user" class="w-3 h-3 mr-1"></i> ${p}
+                </span>`
+            ).join('');
+            
+            lucide.createIcons({root: display});
+        }
+
+        // ================= QUICK ADD PASSENGER IN MODAL =================
+        function toggleQuickAddPax() {
+            document.getElementById('quick-add-pax-form').classList.toggle('hidden');
+        }
+
+        function handleQuickAddPassenger(e) {
+            e.preventDefault();
+            const sex = document.getElementById('quick-pax-sex').value;
+            let prefix = 'Mrs.';
+            if (sex === 'Male' || sex === 'Male Child' || sex === 'Male Infant') {
+                prefix = 'Mr.';
+            } else if (sex === 'Female Child' || sex === 'Female Infant') {
+                prefix = 'Ms.';
+            }
+            
+            const fullName = `${prefix} ${document.getElementById('quick-pax-name').value}`;
+            
+            // Push ke state utama
+            appState.passengers.push({ id: Date.now(), name: fullName, sex });
+            saveState(); 
+            renderPassengerTable(); // Update tabel DB di background
+            
+            // Bersihkan dan sembunyikan form
+            document.getElementById('quick-pax-name').value = '';
+            toggleQuickAddPax();
+            showToast("Penumpang baru berhasil ditambahkan dari pintasan!");
+            
+            // Otomatis cari penumpang yang baru ditambahkan di kotak pencarian modal
+            const searchInput = document.getElementById('pax-search-input');
+            searchInput.value = fullName;
+            renderPaxSelectorList(fullName.toLowerCase());
+        }
+
+        // ================= RENDERERS =================
+        function renderAllDropdowns() {
+            const cabinSelect = document.getElementById('report-cabin-name');
+            if(cabinSelect) {
+                cabinSelect.innerHTML = '<option value="">-- Select Cabin Crew --</option>';
+                appState.cabinCrew.forEach(crew => { cabinSelect.innerHTML += `<option value="${crew.name}">${crew.name}</option>`; });
+            }
+
+            const acSelect = document.getElementById('report-aircraft');
+            if(acSelect) {
+                acSelect.innerHTML = '<option value="">-- Select Aircraft --</option>';
+                appState.aircrafts.forEach(ac => { acSelect.innerHTML += `<option value="${ac.reg}">${ac.reg} (${ac.type})</option>`; });
+            }
+            
+            const condSelect = document.getElementById('report-doc-position');
+            if(condSelect) {
+                condSelect.innerHTML = '<option value="">-- Select Position --</option>';
+                appState.cabinConditions.forEach(cond => { condSelect.innerHTML += `<option value="${cond.item}">${cond.item}</option>`; });
+            }
+        }
+
+        function renderAllTables() {
+            renderCabinTable();
+            renderAircraftTable();
+            renderPassengerTable();
+            renderEmailTable();
+            renderCabinConditionTable();
+        }
+
+        function updateDashboardStats() {
+            const elReports = document.getElementById('stat-reports');
+            if(!elReports) return; // Prevent error before DOM loads
+
+            elReports.innerText = appState.reports.length;
+            document.getElementById('stat-crew').innerText = appState.cabinCrew.length;
+            document.getElementById('stat-aircrafts').innerText = appState.aircrafts.length;
+            document.getElementById('stat-passengers').innerText = appState.passengers.length;
+
+            const tbody = document.getElementById('dashboard-recent-table');
+            tbody.innerHTML = '';
+            const recent = [...appState.reports].sort((a,b) => b.id - a.id).slice(0, 5); 
+            
+            if(recent.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400 italic">No recent reports found</td></tr>`;
+                return;
+            }
+
+            recent.forEach(r => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4">${formatDateOnly(r.startDuty)}</td>
+                        <td class="px-6 py-4 font-semibold text-gray-800">${r.cabinName}</td>
+                        <td class="px-6 py-4"><span class="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-bold border border-slate-200">${r.aircraftReg}</span></td>
+                        <td class="px-6 py-4 text-gray-500 font-medium">${r.route}</td>
+                        <td class="px-6 py-4 text-emerald-600 font-bold">${r.duration}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= CRUD REPORTS =================
+        function resetForm() {
+            document.getElementById('form-new-report').reset();
+            document.getElementById('report-duration').value = '';
+            currentSelectedPax = [];
+            updateSelectedPaxDisplay();
+        }
+
+        function handleNewReportSubmit(e) {
+            e.preventDefault();
+            const start = document.getElementById('report-start-duty').value;
+            const end = document.getElementById('report-end-duty').value;
+            
+            // Validasi tanggal
+            const startD = new Date(start); startD.setHours(0,0,0,0);
+            const endD = new Date(end); endD.setHours(0,0,0,0);
+            if (endD < startD) {
+                showToast("End Duty harus sama atau lebih besar dari Start Duty!", "error");
+                return;
+            }
+
+            const newReport = {
+                id: Date.now(),
+                cabinName: document.getElementById('report-cabin-name').value,
+                startDuty: start,
+                endDuty: end,
+                duration: document.getElementById('report-duration').value,
+                aircraftReg: document.getElementById('report-aircraft').value,
+                route: document.getElementById('report-route').value,
+                totalPax: document.getElementById('report-total-pax').value,
+                passengersList: [...currentSelectedPax], 
+                
+                // Extra Fields
+                remarkBefore: document.getElementById('report-remark-before').value,
+                remarkDuring: document.getElementById('report-remark-during').value,
+                remarkAfter: document.getElementById('report-remark-after').value,
+                foodRes: document.getElementById('report-food-res').value,
+                bevRes: document.getElementById('report-bev-res').value,
+                favFood: document.getElementById('report-fav-food').value,
+                favBev: document.getElementById('report-fav-bev').value,
+                presentCond: document.getElementById('report-present-cond').value,
+                conclusion: document.getElementById('report-present-concl').value,
+                allowance: document.getElementById('report-allowance').value,
+                docPosition: document.getElementById('report-doc-position').value,
+                
+                createdAt: new Date().toISOString()
+            };
+
+            appState.reports.push(newReport);
+            saveState();
+            
+            showToast("Report submitted successfully!");
+            resetForm();
+            switchTab('history');
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-table-body');
+            const emptyState = document.getElementById('history-empty');
+            tbody.innerHTML = '';
+
+            if (appState.reports.length === 0) {
+                tbody.parentElement.parentElement.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            tbody.parentElement.parentElement.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            const sortedReports = [...appState.reports].sort((a,b) => b.id - a.id);
+
+            sortedReports.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-gray-800">${r.cabinName}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-xs font-bold border border-blue-100">${r.aircraftReg}</span>
+                            <span class="text-gray-500 font-medium text-xs">${r.route}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-xs text-gray-500">
+                            <div><span class="font-medium text-gray-700">Start:</span> ${formatDateTime(r.startDuty)}</div>
+                            <div><span class="font-medium text-gray-700">End:</span> ${formatDateTime(r.endDuty)}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-emerald-600 font-bold">${r.duration}</td>
+                    <td class="px-6 py-4 text-center font-medium">${r.totalPax}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end space-x-2">
+                            <button onclick="viewReportDetail(${r.id})" class="text-blue-600 hover:text-white hover:bg-blue-600 p-1.5 bg-blue-50 rounded-lg transition-colors" title="View Detail">
+                                <i data-lucide="file-search" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteReport(${r.id})" class="text-red-600 hover:text-white hover:bg-red-600 p-1.5 bg-red-50 rounded-lg transition-colors" title="Delete">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons({root: tbody});
+        }
+
+        function deleteReport(id) {
+            if(confirm('Are you sure you want to delete this report?')) {
+                appState.reports = appState.reports.filter(r => r.id !== id);
+                saveState();
+                renderHistoryTable();
+                showToast("Report deleted successfully!");
+            }
+        }
+
+        // Modal Logic
+        function viewReportDetail(id) {
+            const report = appState.reports.find(r => r.id === id);
+            if (!report) return;
+
+            const crew = appState.cabinCrew.find(c => c.name === report.cabinName);
+            const signUrl = crew ? crew.signUrl : '#';
+
+            const content = document.getElementById('modal-content');
+            content.innerHTML = `
+                <div class="grid grid-cols-2 gap-y-6 gap-x-8 text-sm">
+                    <div class="col-span-2 md:col-span-1 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <p class="text-gray-500 mb-1 text-xs font-bold uppercase tracking-wider">Cabin Crew</p>
+                        <p class="font-bold text-gray-800 text-lg flex items-center"><i data-lucide="user" class="w-4 h-4 mr-2 text-gray-400"></i> ${report.cabinName}</p>
+                    </div>
+                    <div class="col-span-2 md:col-span-1 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <p class="text-blue-500 mb-1 text-xs font-bold uppercase tracking-wider">Flight Context</p>
+                        <p class="font-bold text-blue-900 flex items-center"><i data-lucide="plane" class="w-4 h-4 mr-2 opacity-70"></i> ${report.aircraftReg} &nbsp;&bull;&nbsp; ${report.route}</p>
+                    </div>
+                    
+                    <div class="col-span-2 grid grid-cols-2 gap-4">
+                        <div class="border border-gray-100 rounded-xl p-4">
+                            <p class="text-gray-500 mb-1 text-xs font-bold uppercase">Schedule</p>
+                            <div class="flex flex-col space-y-2 mt-2">
+                                <div class="flex items-center text-gray-700"><div class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div> ${formatDateTime(report.startDuty)}</div>
+                                <div class="flex items-center text-gray-700"><div class="w-2 h-2 rounded-full bg-red-500 mr-2"></div> ${formatDateTime(report.endDuty)}</div>
+                            </div>
+                        </div>
+                        <div class="border border-gray-100 rounded-xl p-4 flex flex-col justify-center bg-emerald-50/30 border-emerald-100">
+                            <p class="text-emerald-700 mb-1 text-xs font-bold uppercase">Total Duration</p>
+                            <p class="font-black text-emerald-600 text-xl">${report.duration}</p>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2 mt-2">
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-gray-800 font-bold">Passenger Manifest</p>
+                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-md font-bold border border-gray-200">Total: ${report.totalPax} Pax</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-inner max-h-40 overflow-y-auto">
+                            ${report.passengersList && report.passengersList.length > 0 
+                                ? `<ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">${report.passengersList.map(p => `<li class="flex items-center text-sm text-gray-700"><i data-lucide="user-check" class="w-3 h-3 mr-2 text-blue-500"></i>${p}</li>`).join('')}</ul>` 
+                                : '<p class="text-gray-400 italic text-center py-4">No passenger details recorded on this report.</p>'}
+                        </div>
+                    </div>
+                    
+                    <!-- NEW EXTRA FIELDS BLOCK -->
+                    <div class="col-span-2 mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px]">
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <p class="font-bold text-gray-700 mb-2 border-b pb-2 uppercase tracking-wider text-xs">Pax Remarks</p>
+                            <p class="mb-1"><span class="font-semibold text-gray-800">Before:</span> <span class="text-gray-600">${report.remarkBefore || '-'}</span></p>
+                            <p class="mb-1"><span class="font-semibold text-gray-800">During:</span> <span class="text-gray-600">${report.remarkDuring || '-'}</span></p>
+                            <p><span class="font-semibold text-gray-800">After:</span> <span class="text-gray-600">${report.remarkAfter || '-'}</span></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <p class="font-bold text-gray-700 mb-2 border-b pb-2 uppercase tracking-wider text-xs">F&B Preferences</p>
+                            <p class="mb-1"><span class="font-semibold text-gray-800">Food Restriction:</span> <span class="text-gray-600">${report.foodRes || '-'}</span></p>
+                            <p class="mb-1"><span class="font-semibold text-gray-800">Bev Restriction:</span> <span class="text-gray-600">${report.bevRes || '-'}</span></p>
+                            <p class="mb-1"><span class="font-semibold text-gray-800">Fav Food:</span> <span class="text-gray-600">${report.favFood || '-'}</span></p>
+                            <p><span class="font-semibold text-gray-800">Fav Bev:</span> <span class="text-gray-600">${report.favBev || '-'}</span></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <p class="font-bold text-gray-700 mb-2 border-b pb-2 uppercase tracking-wider text-xs">Condition & Conclusion</p>
+                            <p class="mb-1"><span class="font-semibold text-gray-800">Present Cond:</span> <span class="text-gray-600">${report.presentCond || '-'}</span></p>
+                            <p><span class="font-semibold text-gray-800">Conclusion:</span> <span class="text-gray-600">${report.conclusion || '-'}</span></p>
+                        </div>
+                        <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                            <p class="font-bold text-blue-800 mb-2 border-b border-blue-200 pb-2 uppercase tracking-wider text-xs">Allowance & Docs</p>
+                            <p class="mb-1"><span class="font-semibold text-blue-900">Allowance/Transport:</span> <span class="text-blue-700">${report.allowance || '-'}</span></p>
+                            <p><span class="font-semibold text-blue-900">Doc Position:</span> <span class="text-blue-700">${report.docPosition || '-'}</span></p>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2 flex flex-col items-end mt-4 pt-4 border-t border-gray-100">
+                        <p class="text-gray-500 text-xs font-bold mb-2 uppercase">Verified Signature</p>
+                        <div class="w-40 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white text-xs text-gray-400 overflow-hidden relative">
+                            ${crew ? `<img src="${signUrl}" alt="Sign" onerror="this.outerHTML='<span class=\\'px-2 text-center\\'>[Invalid Signature URL]</span>'" class="max-h-full max-w-full object-contain mix-blend-multiply">` : 'No Signature'}
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">${report.cabinName}</p>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons({root: content});
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+
+        // ================= CRUD DATABASES =================
+        function handleAddCabin(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('edit-cabin-id').value;
+            const name = document.getElementById('new-cabin-name').value;
+            const email = document.getElementById('new-cabin-email').value;
+            const signUrl = document.getElementById('new-cabin-sign').value;
+
+            if (idInput) {
+                // Update
+                const index = appState.cabinCrew.findIndex(c => c.id == idInput);
+                if (index !== -1) {
+                    appState.cabinCrew[index].name = name;
+                    appState.cabinCrew[index].email = email;
+                    appState.cabinCrew[index].signUrl = signUrl;
+                    showToast("Data Kabin berhasil diupdate!");
+                }
+            } else {
+                // Insert
+                appState.cabinCrew.push({ id: Date.now(), name, email, signUrl });
+                showToast("Cabin Crew berhasil ditambahkan!");
+            }
+            
+            saveState(); 
+            renderCabinTable();
+            cancelEditCabin();
+        }
+
+        function editCabin(id) {
+            const crew = appState.cabinCrew.find(x => x.id === id);
+            if (!crew) return;
+            
+            document.getElementById('edit-cabin-id').value = crew.id;
+            document.getElementById('new-cabin-name').value = crew.name;
+            document.getElementById('new-cabin-email').value = crew.email || '';
+            document.getElementById('new-cabin-sign').value = crew.signUrl;
+            
+            document.getElementById('btn-submit-cabin').innerText = 'Update Data';
+            document.getElementById('btn-cancel-cabin').classList.remove('hidden');
+        }
+
+        function cancelEditCabin() {
+            document.getElementById('edit-cabin-id').value = '';
+            document.getElementById('new-cabin-name').value = '';
+            document.getElementById('new-cabin-email').value = '';
+            document.getElementById('new-cabin-sign').value = '';
+            
+            document.getElementById('btn-submit-cabin').innerText = 'Tambah Data';
+            document.getElementById('btn-cancel-cabin').classList.add('hidden');
+        }
+
+        function renderCabinTable() {
+            const tbody = document.getElementById('db-cabin-table');
+            tbody.innerHTML = '';
+            appState.cabinCrew.forEach((c, i) => {
+                const emailText = c.email ? c.email : '-';
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">${i + 1}</td>
+                        <td class="px-6 py-4 font-bold text-gray-800">${c.name}</td>
+                        <td class="px-6 py-4 text-gray-600">${emailText}</td>
+                        <td class="px-6 py-4"><a href="${c.signUrl}" target="_blank" class="text-xs text-blue-500 bg-blue-50 px-2 py-1 rounded truncate inline-block max-w-[200px] hover:underline">${c.signUrl}</a></td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center space-x-2">
+                                <button onclick="editCabin(${c.id})" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                <button onclick="deleteCabin(${c.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            lucide.createIcons({root: tbody});
+        }
+        function deleteCabin(id) { if(confirm('Hapus data ini?')) { appState.cabinCrew = appState.cabinCrew.filter(x => x.id !== id); saveState(); renderCabinTable(); } }
+
+        function handleAddAircraft(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('edit-ac-id').value;
+            const reg = document.getElementById('new-ac-reg').value.toUpperCase();
+            const type = document.getElementById('new-ac-type').value;
+
+            if (idInput) {
+                // Update
+                const index = appState.aircrafts.findIndex(a => a.id == idInput);
+                if (index !== -1) {
+                    appState.aircrafts[index].reg = reg;
+                    appState.aircrafts[index].type = type;
+                    showToast("Data Pesawat berhasil diupdate!");
+                }
+            } else {
+                // Insert
+                appState.aircrafts.push({ id: Date.now(), reg, type });
+                showToast("Pesawat berhasil ditambahkan!");
+            }
+            
+            saveState(); 
+            renderAircraftTable();
+            cancelEditAircraft();
+        }
+
+        function editAircraft(id) {
+            const ac = appState.aircrafts.find(x => x.id === id);
+            if (!ac) return;
+            
+            document.getElementById('edit-ac-id').value = ac.id;
+            document.getElementById('new-ac-reg').value = ac.reg;
+            document.getElementById('new-ac-type').value = ac.type;
+            
+            document.getElementById('btn-submit-ac').innerText = 'Update Data';
+            document.getElementById('btn-cancel-ac').classList.remove('hidden');
+        }
+
+        function cancelEditAircraft() {
+            document.getElementById('edit-ac-id').value = '';
+            document.getElementById('new-ac-reg').value = '';
+            document.getElementById('new-ac-type').value = '';
+            
+            document.getElementById('btn-submit-ac').innerText = 'Tambah Data';
+            document.getElementById('btn-cancel-ac').classList.add('hidden');
+        }
+
+        function renderAircraftTable() {
+            const tbody = document.getElementById('db-aircraft-table');
+            tbody.innerHTML = '';
+            appState.aircrafts.forEach((a, i) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">${i + 1}</td>
+                        <td class="px-6 py-4 font-bold text-gray-800 uppercase tracking-wider">${a.reg}</td>
+                        <td class="px-6 py-4 font-medium text-gray-600">${a.type}</td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center space-x-2">
+                                <button onclick="editAircraft(${a.id})" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                <button onclick="deleteAircraft(${a.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            lucide.createIcons({root: tbody});
+        }
+        function deleteAircraft(id) { if(confirm('Hapus data ini?')) { appState.aircrafts = appState.aircrafts.filter(x => x.id !== id); saveState(); renderAircraftTable(); } }
+
+        // --- Cabin Condition CRUD ---
+        function handleAddCabinCondition(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('edit-cond-id').value;
+            const item = document.getElementById('new-cond-item').value;
+
+            if (idInput) {
+                const index = appState.cabinConditions.findIndex(c => c.id == idInput);
+                if (index !== -1) {
+                    appState.cabinConditions[index].item = item;
+                    showToast("Item Kondisi Kabin berhasil diupdate!");
+                }
+            } else {
+                appState.cabinConditions.push({ id: Date.now(), item });
+                showToast("Item Kondisi Kabin berhasil ditambahkan!");
+            }
+            saveState(); renderCabinConditionTable(); cancelEditCabinCondition();
+        }
+
+        function editCabinCondition(id) {
+            const cond = appState.cabinConditions.find(x => x.id === id);
+            if (!cond) return;
+            document.getElementById('edit-cond-id').value = cond.id;
+            document.getElementById('new-cond-item').value = cond.item;
+            document.getElementById('btn-submit-cond').innerText = 'Update Item';
+            document.getElementById('btn-cancel-cond').classList.remove('hidden');
+        }
+
+        function cancelEditCabinCondition() {
+            document.getElementById('edit-cond-id').value = '';
+            document.getElementById('new-cond-item').value = '';
+            document.getElementById('btn-submit-cond').innerText = 'Tambah Item';
+            document.getElementById('btn-cancel-cond').classList.add('hidden');
+        }
+
+        function renderCabinConditionTable() {
+            const tbody = document.getElementById('db-condition-table');
+            tbody.innerHTML = '';
+            appState.cabinConditions.forEach((c, i) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">${i + 1}</td>
+                        <td class="px-6 py-4 font-bold text-gray-800">${c.item}</td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center space-x-2">
+                                <button onclick="editCabinCondition(${c.id})" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                <button onclick="deleteCabinCondition(${c.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            lucide.createIcons({root: tbody});
+        }
+        function deleteCabinCondition(id) { if(confirm('Hapus item ini?')) { appState.cabinConditions = appState.cabinConditions.filter(x => x.id !== id); saveState(); renderCabinConditionTable(); } }
+
+        function handleAddPassenger(e) {
+            e.preventDefault();
+            const sex = document.getElementById('new-pax-sex').value;
+            let prefix = 'Mrs.';
+            if (sex === 'Male' || sex === 'Male Child' || sex === 'Male Infant') {
+                prefix = 'Mr.';
+            } else if (sex === 'Female Child' || sex === 'Female Infant') {
+                prefix = 'Ms.';
+            }
+            appState.passengers.push({ id: Date.now(), name: `${prefix} ${document.getElementById('new-pax-name').value}`, sex });
+            saveState(); renderPassengerTable();
+            document.getElementById('new-pax-name').value = '';
+            showToast("Penumpang berhasil ditambahkan!");
+        }
+
+        function renderPassengerTable() {
+            const tbody = document.getElementById('db-passenger-table');
+            tbody.innerHTML = '';
+            appState.passengers.forEach((p, i) => {
+                const badge = p.sex === 'Male' ? 'text-blue-700 bg-blue-100 border-blue-200' : 'text-pink-700 bg-pink-100 border-pink-200';
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">${i + 1}</td>
+                        <td class="px-6 py-4 font-bold text-gray-800">${p.name}</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-bold border ${badge}">${p.sex}</span></td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="deletePassenger(${p.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                        </td>
+                    </tr>`;
+            });
+            lucide.createIcons({root: tbody});
+        }
+        function deletePassenger(id) { if(confirm('Hapus data ini?')) { appState.passengers = appState.passengers.filter(x => x.id !== id); saveState(); renderPassengerTable(); } }
+
+        // ================= ADMIN & EMAIL MANAGEMENT =================
+        function requireAdminAccess() {
+            if (isAdminLoggedIn) {
+                switchTab('admin-panel');
+            } else {
+                document.getElementById('admin-login-modal').classList.remove('hidden');
+                document.getElementById('admin-user-input').value = '';
+                document.getElementById('admin-pass-input').value = '';
+            }
+        }
+
+        function closeAdminLogin() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            switchTab('dashboard');
+            showToast("Admin Logout Berhasil!");
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('admin-user-input').value;
+            const pass = document.getElementById('admin-pass-input').value;
+
+            if (user === 'admin' && pass === 'ramdan28') {
+                isAdminLoggedIn = true;
+                closeAdminLogin();
+                showToast("Login Admin Berhasil!");
+                switchTab('admin-panel');
+                renderEmailTable();
+            } else {
+                showToast("Username atau Password salah!", "error");
+            }
+        }
+
+        function handleEmailSubmit(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('edit-email-id').value;
+            const name = document.getElementById('admin-email-name').value;
+            const address = document.getElementById('admin-email-address').value;
+
+            if (idInput) {
+                // Proses Edit
+                const index = appState.emails.findIndex(em => em.id == idInput);
+                if (index !== -1) {
+                    appState.emails[index].name = name;
+                    appState.emails[index].address = address;
+                    showToast("Email berhasil diupdate!");
+                }
+            } else {
+                // Proses Tambah Baru (Batasan Maks 10)
+                if (appState.emails.length >= 10) {
+                    showToast("Batas maksimal 10 email telah tercapai!", "error");
+                    return;
+                }
+                appState.emails.push({ id: Date.now(), name, address });
+                showToast("Email berhasil ditambahkan!");
+            }
+            
+            saveState();
+            renderEmailTable();
+            cancelEditEmail(); // Reset form
+        }
+
+        function renderEmailTable() {
+            const tbody = document.getElementById('admin-email-table');
+            tbody.innerHTML = '';
+            
+            // Update counter badge
+            document.getElementById('email-count-badge').innerText = `${appState.emails.length}/10 Emails`;
+            
+            appState.emails.forEach((em, i) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">${i + 1}</td>
+                        <td class="px-6 py-4 font-bold text-gray-800">${em.name}</td>
+                        <td class="px-6 py-4 text-blue-600 font-medium">${em.address}</td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center space-x-2">
+                                <button onclick="editEmail(${em.id})" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                <button onclick="deleteEmail(${em.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            lucide.createIcons({root: tbody});
+        }
+
+        function editEmail(id) {
+            const em = appState.emails.find(x => x.id === id);
+            if (!em) return;
+            
+            document.getElementById('edit-email-id').value = em.id;
+            document.getElementById('admin-email-name').value = em.name;
+            document.getElementById('admin-email-address').value = em.address;
+            
+            document.getElementById('btn-submit-email').innerText = 'Update Email';
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+        }
+
+        function cancelEditEmail() {
+            document.getElementById('edit-email-id').value = '';
+            document.getElementById('admin-email-name').value = '';
+            document.getElementById('admin-email-address').value = '';
+            
+            document.getElementById('btn-submit-email').innerText = 'Tambah Email';
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+        }
+
+        function deleteEmail(id) {
+            if(confirm('Hapus email ini?')) { 
+                appState.emails = appState.emails.filter(x => x.id !== id); 
+                saveState(); 
+                renderEmailTable(); 
+            }
+        }
+
+    </script>
+</body>
+</html>
