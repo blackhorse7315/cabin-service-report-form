@@ -35,6 +35,25 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+
+        /* Print Styles for Native Vector PDF Generation */
+        @media print {
+            body { background: white; }
+            /* Sembunyikan elemen UI utama saat mengeprint */
+            body > header, body > nav, body > main { display: none !important; }
+            #detail-modal, #admin-login-modal, #pax-selector-modal, #toast-container { display: none !important; }
+            
+            /* Tampilkan area khusus untuk print */
+            #print-container { 
+                display: block !important; 
+                width: 100%; 
+                position: relative; 
+            }
+            @page { 
+                size: A4 portrait; 
+                margin: 15mm; 
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
@@ -215,12 +234,12 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Start Duty</label>
-                                <input type="datetime-local" id="report-start-duty" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors outline-none cursor-pointer">
+                                <input type="date" id="report-start-duty" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors outline-none cursor-pointer">
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">End Duty</label>
-                                <input type="datetime-local" id="report-end-duty" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors outline-none cursor-pointer">
+                                <input type="date" id="report-end-duty" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors outline-none cursor-pointer">
                             </div>
 
                             <div class="col-span-1 md:col-span-2">
@@ -229,7 +248,7 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i data-lucide="calendar" class="h-5 w-5 text-gray-400"></i>
                                     </div>
-                                    <input type="text" id="report-duration" readonly placeholder="0 Hari" class="w-full rounded-xl border-gray-200 border p-3 pl-10 bg-slate-50 text-emerald-600 font-semibold cursor-not-allowed">
+                                    <input type="text" id="report-duration" readonly placeholder="0 Days" class="w-full rounded-xl border-gray-200 border p-3 pl-10 bg-slate-50 text-emerald-600 font-semibold cursor-not-allowed">
                                 </div>
                             </div>
 
@@ -247,7 +266,7 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Route</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">General Route</label>
                                 <input type="text" id="report-route" required placeholder="e.g. CGK - DPS - CGK" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors outline-none uppercase">
                             </div>
 
@@ -267,8 +286,8 @@
 
                                 <div class="mt-4 pt-4 border-t border-gray-200">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Total Passenger</label>
-                                    <input type="number" id="report-total-pax" required min="0" placeholder="0" class="w-full max-w-[200px] rounded-lg border-gray-300 border p-2 focus:ring-2 focus:ring-blue-500 outline-none">
-                                    <p class="text-xs text-gray-400 mt-1">Otomatis terisi saat memilih penumpang, bisa diubah manual jika ada bayi/penumpang lain.</p>
+                                    <input type="number" id="report-total-pax" readonly value="0" class="w-full max-w-[200px] rounded-lg border-gray-200 border bg-gray-100 text-gray-700 font-bold p-2 outline-none cursor-not-allowed">
+                                    <p class="text-xs text-gray-400 mt-1">Dihitung otomatis berdasarkan jumlah penumpang di manifest.</p>
                                 </div>
                             </div>
                             
@@ -281,13 +300,13 @@
                                     <div class="space-y-4">
                                         <label class="block text-sm font-medium text-gray-700 border-b pb-1">Pax Remarks</label>
                                         <div>
-                                            <input type="text" id="report-remark-before" placeholder="Before Flight" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                            <textarea id="report-remark-before" rows="2" placeholder="Before Flight" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                                         </div>
                                         <div>
-                                            <input type="text" id="report-remark-during" placeholder="During Flight" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                            <textarea id="report-remark-during" rows="3" placeholder="During Flight" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                                         </div>
                                         <div>
-                                            <input type="text" id="report-remark-after" placeholder="After Flight" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                            <textarea id="report-remark-after" rows="3" placeholder="After Flight" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                                         </div>
                                     </div>
 
@@ -295,29 +314,26 @@
                                     <div class="space-y-4">
                                         <label class="block text-sm font-medium text-gray-700 border-b pb-1">F&B Preferences</label>
                                         <div>
-                                            <input type="text" id="report-food-res" placeholder="Food Restriction" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                            <textarea id="report-food-res" rows="2" placeholder="Food Restriction" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                                         </div>
                                         <div>
-                                            <input type="text" id="report-bev-res" placeholder="Beverage Restriction" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                            <textarea id="report-bev-res" rows="2" placeholder="Beverage Restriction" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                                         </div>
                                         <div>
-                                            <input type="text" id="report-fav-food" placeholder="Favorite Foods" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                            <textarea id="report-fav-food" rows="2" placeholder="Favorite Foods" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                                         </div>
                                         <div>
-                                            <input type="text" id="report-fav-bev" placeholder="Favorite Beverage" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                            <textarea id="report-fav-bev" rows="2" placeholder="Favorite Beverage" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                                         </div>
                                     </div>
 
                                 </div>
 
+                                <!-- Conclusion & Allowance Section -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Present Condition</label>
-                                        <input type="text" id="report-present-cond" placeholder="Present Condition" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                                    </div>
-                                    <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Conclusion</label>
-                                        <input type="text" id="report-present-concl" placeholder="Conclusion" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <textarea id="report-present-concl" rows="3" placeholder="Conclusion" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Allowance & Transport</label>
@@ -327,14 +343,22 @@
                                             <option value="Not Recieved">Not Recieved</option>
                                         </select>
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Add Image Documentation</label>
-                                        <select id="report-doc-position" class="w-full rounded-lg border-gray-200 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white mb-2 cursor-pointer">
-                                            <option value="">-- Select Position --</option>
-                                            <!-- Injected via JS -->
-                                        </select>
-                                        <p class="text-[11px] text-amber-600 mb-2 flex items-center"><i data-lucide="info" class="w-3 h-3 mr-1"></i> Foto dianjurkan dalam format landscape</p>
-                                        <input type="file" id="report-upload-image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                                </div>
+                                
+                                <!-- Multi Image Documentation Section -->
+                                <div class="mt-6 p-5 bg-gray-50 border border-gray-200 rounded-xl">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-800">Image Documentation</label>
+                                            <p class="text-xs text-gray-500 mt-0.5">Tambahkan foto kondisi kabin beserta posisinya. Anda bisa menambah banyak foto.</p>
+                                        </div>
+                                        <button type="button" onclick="addImageBlock()" class="flex items-center text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors border border-blue-200 shadow-sm whitespace-nowrap">
+                                            <i data-lucide="image-plus" class="w-4 h-4 mr-1"></i> Add Image
+                                        </button>
+                                    </div>
+                                    <div id="image-docs-container" class="space-y-4">
+                                        <!-- Dynamic Image Blocks will be appended here -->
+                                        <div class="text-sm text-gray-500 italic" id="empty-img-state">Belum ada dokumentasi. Klik "Add Image" untuk menambah.</div>
                                     </div>
                                 </div>
                             </div>
@@ -774,13 +798,16 @@
                 <div class="p-6 md:p-8" id="modal-content">
                     <!-- Content injected dynamically -->
                 </div>
-                <div class="p-6 border-t border-gray-100 flex justify-end bg-gray-50">
-                    <button type="button" onclick="closeModal()" class="px-6 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors shadow-sm">Tutup Laporan</button>
+                <div class="p-6 border-t border-gray-100 flex justify-between bg-gray-50 rounded-b-2xl" id="modal-footer">
+                    <!-- Buttons injected dynamically -->
                 </div>
             </div>
         </div>
 
     </main>
+
+    <!-- Hidden Print Container -->
+    <div id="print-container" class="hidden"></div>
 
     <!-- JavaScript Logic -->
     <script>
@@ -927,7 +954,8 @@
                         const diffTime = Math.abs(end - start);
                         // Ditambah 1 karena hari pertama tugas dihitung
                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                        document.getElementById('report-duration').value = `${diffDays} Hari`;
+                        const dayLabel = diffDays === 1 ? 'Day' : 'Days';
+                        document.getElementById('report-duration').value = `${diffDays} ${dayLabel}`;
                     } else {
                         document.getElementById('report-duration').value = "Tgl Selesai harus >= Mulai";
                     }
@@ -1004,7 +1032,7 @@
             
             updateSelectedPaxDisplay();
             
-            // Auto isi total passenger (pengguna masih bisa mengeditnya manual)
+            // Auto isi total passenger
             document.getElementById('report-total-pax').value = currentSelectedPax.length;
 
             closePaxSelectorModal();
@@ -1074,12 +1102,6 @@
                 acSelect.innerHTML = '<option value="">-- Select Aircraft --</option>';
                 appState.aircrafts.forEach(ac => { acSelect.innerHTML += `<option value="${ac.reg}">${ac.reg} (${ac.type})</option>`; });
             }
-            
-            const condSelect = document.getElementById('report-doc-position');
-            if(condSelect) {
-                condSelect.innerHTML = '<option value="">-- Select Position --</option>';
-                appState.cabinConditions.forEach(cond => { condSelect.innerHTML += `<option value="${cond.item}">${cond.item}</option>`; });
-            }
         }
 
         function renderAllTables() {
@@ -1125,8 +1147,70 @@
         function resetForm() {
             document.getElementById('form-new-report').reset();
             document.getElementById('report-duration').value = '';
+            document.getElementById('report-total-pax').value = '0';
             currentSelectedPax = [];
             updateSelectedPaxDisplay();
+            document.getElementById('image-docs-container').innerHTML = '<div class="text-sm text-gray-500 italic" id="empty-img-state">Belum ada dokumentasi. Klik "Add Image" untuk menambah.</div>';
+        }
+
+        // --- Logika Dynamic Image Documentation ---
+        function addImageBlock() {
+            const container = document.getElementById('image-docs-container');
+            const emptyState = document.getElementById('empty-img-state');
+            if (emptyState) emptyState.remove();
+
+            const blockId = Date.now() + Math.floor(Math.random() * 100);
+            
+            // Build options based on database
+            let positionOptions = '<option value="">-- Select Position --</option>';
+            appState.cabinConditions.forEach(cond => {
+                positionOptions += `<option value="${cond.item}">${cond.item}</option>`;
+            });
+
+            const div = document.createElement('div');
+            div.className = "bg-white border border-gray-200 p-4 rounded-xl relative shadow-sm image-doc-item transition-all duration-300";
+            div.id = `img-block-${blockId}`;
+            div.innerHTML = `
+                <button type="button" onclick="document.getElementById('img-block-${blockId}').remove()" class="absolute top-3 right-3 text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors border border-transparent hover:border-red-100" title="Hapus Foto">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Position <span class="text-red-500">*</span></label>
+                        <select class="img-pos w-full rounded-lg border-gray-300 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 cursor-pointer" required>
+                            ${positionOptions}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Condition <span class="text-red-500">*</span></label>
+                        <input type="text" class="img-cond w-full rounded-lg border-gray-300 border p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50" placeholder="e.g. Broken latch" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Upload Image <span class="text-red-500">*</span></label>
+                        <input type="file" accept="image/*" class="img-file w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" onchange="handleImageFileChange(this)" required>
+                        <p class="text-[10px] text-amber-600 mt-1 flex items-center"><i data-lucide="info" class="w-3 h-3 mr-1"></i> Dianjurkan format landscape. (Maks 1MB untuk mode offline)</p>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            lucide.createIcons({root: div});
+        }
+
+        function handleImageFileChange(input) {
+            const file = input.files[0];
+            if (file) {
+                if (file.size > 1.5 * 1024 * 1024) { // Limit 1.5MB to save LocalStorage memory
+                    showToast("Ukuran foto terlalu besar! Maksimal 1.5 MB.", "error");
+                    input.value = '';
+                    input.dataset.base64 = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    input.dataset.base64 = e.target.result; // Store base64 data onto the input dataset
+                }
+                reader.readAsDataURL(file);
+            }
         }
 
         function handleNewReportSubmit(e) {
@@ -1141,6 +1225,17 @@
                 showToast("End Duty harus sama atau lebih besar dari Start Duty!", "error");
                 return;
             }
+
+            // Gather Dynamic Images
+            const imageDocItems = document.querySelectorAll('.image-doc-item');
+            const documentationData = [];
+            imageDocItems.forEach(item => {
+                documentationData.push({
+                    position: item.querySelector('.img-pos').value,
+                    condition: item.querySelector('.img-cond').value,
+                    imageStr: item.querySelector('.img-file').dataset.base64 || ''
+                });
+            });
 
             const newReport = {
                 id: Date.now(),
@@ -1161,10 +1256,9 @@
                 bevRes: document.getElementById('report-bev-res').value,
                 favFood: document.getElementById('report-fav-food').value,
                 favBev: document.getElementById('report-fav-bev').value,
-                presentCond: document.getElementById('report-present-cond').value,
                 conclusion: document.getElementById('report-present-concl').value,
                 allowance: document.getElementById('report-allowance').value,
-                docPosition: document.getElementById('report-doc-position').value,
+                documentation: documentationData, // Array kumpulan foto & kondisi
                 
                 createdAt: new Date().toISOString()
             };
@@ -1195,31 +1289,29 @@
 
             sortedReports.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.className = "hover:bg-blue-50 transition-colors cursor-pointer";
+                tr.setAttribute('onclick', `viewReportDetail(${r.id})`);
                 tr.innerHTML = `
                     <td class="px-6 py-4">
                         <div class="font-bold text-gray-800">${r.cabinName}</div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center space-x-2">
-                            <span class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-xs font-bold border border-blue-100">${r.aircraftReg}</span>
+                            <span class="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md text-xs font-bold border border-blue-200">${r.aircraftReg}</span>
                             <span class="text-gray-500 font-medium text-xs">${r.route}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="text-xs text-gray-500">
-                            <div><span class="font-medium text-gray-700">Start:</span> ${formatDateTime(r.startDuty)}</div>
-                            <div><span class="font-medium text-gray-700">End:</span> ${formatDateTime(r.endDuty)}</div>
+                            <div><span class="font-medium text-gray-700">Start:</span> ${formatDateOnly(r.startDuty)}</div>
+                            <div><span class="font-medium text-gray-700">End:</span> ${formatDateOnly(r.endDuty)}</div>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-emerald-600 font-bold">${r.duration}</td>
                     <td class="px-6 py-4 text-center font-medium">${r.totalPax}</td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex justify-end space-x-2">
-                            <button onclick="viewReportDetail(${r.id})" class="text-blue-600 hover:text-white hover:bg-blue-600 p-1.5 bg-blue-50 rounded-lg transition-colors" title="View Detail">
-                                <i data-lucide="file-search" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="deleteReport(${r.id})" class="text-red-600 hover:text-white hover:bg-red-600 p-1.5 bg-red-50 rounded-lg transition-colors" title="Delete">
+                            <button onclick="event.stopPropagation(); deleteReport(${r.id})" class="text-red-600 hover:text-white hover:bg-red-600 p-1.5 bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-600 shadow-sm" title="Delete">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -1263,8 +1355,8 @@
                         <div class="border border-gray-100 rounded-xl p-4">
                             <p class="text-gray-500 mb-1 text-xs font-bold uppercase">Schedule</p>
                             <div class="flex flex-col space-y-2 mt-2">
-                                <div class="flex items-center text-gray-700"><div class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div> ${formatDateTime(report.startDuty)}</div>
-                                <div class="flex items-center text-gray-700"><div class="w-2 h-2 rounded-full bg-red-500 mr-2"></div> ${formatDateTime(report.endDuty)}</div>
+                                <div class="flex items-center text-gray-700"><div class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div> ${formatDateOnly(report.startDuty)}</div>
+                                <div class="flex items-center text-gray-700"><div class="w-2 h-2 rounded-full bg-red-500 mr-2"></div> ${formatDateOnly(report.endDuty)}</div>
                             </div>
                         </div>
                         <div class="border border-gray-100 rounded-xl p-4 flex flex-col justify-center bg-emerald-50/30 border-emerald-100">
@@ -1301,15 +1393,30 @@
                             <p><span class="font-semibold text-gray-800">Fav Bev:</span> <span class="text-gray-600">${report.favBev || '-'}</span></p>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                            <p class="font-bold text-gray-700 mb-2 border-b pb-2 uppercase tracking-wider text-xs">Condition & Conclusion</p>
-                            <p class="mb-1"><span class="font-semibold text-gray-800">Present Cond:</span> <span class="text-gray-600">${report.presentCond || '-'}</span></p>
-                            <p><span class="font-semibold text-gray-800">Conclusion:</span> <span class="text-gray-600">${report.conclusion || '-'}</span></p>
+                            <p class="font-bold text-gray-700 mb-2 border-b pb-2 uppercase tracking-wider text-xs">Conclusion</p>
+                            <p><span class="text-gray-600">${report.conclusion || '-'}</span></p>
                         </div>
                         <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                            <p class="font-bold text-blue-800 mb-2 border-b border-blue-200 pb-2 uppercase tracking-wider text-xs">Allowance & Docs</p>
-                            <p class="mb-1"><span class="font-semibold text-blue-900">Allowance/Transport:</span> <span class="text-blue-700">${report.allowance || '-'}</span></p>
-                            <p><span class="font-semibold text-blue-900">Doc Position:</span> <span class="text-blue-700">${report.docPosition || '-'}</span></p>
+                            <p class="font-bold text-blue-800 mb-2 border-b border-blue-200 pb-2 uppercase tracking-wider text-xs">Allowance & Transport</p>
+                            <p class="mb-1"><span class="font-semibold text-blue-900">Status:</span> <span class="text-blue-700">${report.allowance || '-'}</span></p>
                         </div>
+                    </div>
+
+                    <div class="col-span-2 mt-4">
+                        <p class="text-gray-800 font-bold mb-3">Image Documentation & Conditions</p>
+                        ${report.documentation && report.documentation.length > 0 
+                            ? `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                ${report.documentation.map(doc => `
+                                    <div class="bg-white border border-gray-200 rounded-xl p-3 flex flex-col shadow-sm">
+                                        <div class="w-full h-32 bg-gray-100 rounded-lg overflow-hidden mb-3 border border-gray-100">
+                                            ${doc.imageStr ? `<img src="${doc.imageStr}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-gray-400"><i data-lucide="image" class="w-8 h-8"></i></div>`}
+                                        </div>
+                                        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-1 rounded border border-blue-100 w-fit mb-1">${doc.position}</span>
+                                        <span class="text-sm font-medium text-gray-800">${doc.condition}</span>
+                                    </div>
+                                `).join('')}
+                               </div>` 
+                            : '<p class="text-gray-400 italic text-center py-6 bg-gray-50 rounded-xl border border-gray-100">Tidak ada dokumentasi foto yang diunggah.</p>'}
                     </div>
 
                     <div class="col-span-2 flex flex-col items-end mt-4 pt-4 border-t border-gray-100">
@@ -1321,11 +1428,158 @@
                     </div>
                 </div>
             `;
+            
+            // Footer Buttons with Print Functionality
+            const footer = document.getElementById('modal-footer');
+            footer.innerHTML = `
+                <button type="button" onclick="printReportAsPDF(${report.id})" class="px-6 py-2.5 bg-slate-800 text-white border border-transparent rounded-xl hover:bg-slate-900 font-medium transition-colors shadow-md flex items-center">
+                    <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Print as PDF
+                </button>
+                <button type="button" onclick="closeModal()" class="px-6 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors shadow-sm">
+                    Tutup Laporan
+                </button>
+            `;
+
             lucide.createIcons({root: content});
+            lucide.createIcons({root: footer});
             document.getElementById('detail-modal').classList.remove('hidden');
         }
 
         function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+
+        // ================= NATIVE PDF GENERATION =================
+        function printReportAsPDF(id) {
+            const report = appState.reports.find(r => r.id === id);
+            if (!report) return;
+
+            const crew = appState.cabinCrew.find(c => c.name === report.cabinName);
+            const signUrl = crew ? crew.signUrl : '';
+
+            // Clean format for filename
+            const cleanRoute = report.route.replace(/[^a-zA-Z0-9-]/g, '').replace(/\s+/g, '');
+            const cleanName = report.cabinName.replace(/\s+/g, '_');
+            const filename = `CSDuty_Report_${report.aircraftReg}_${cleanRoute}_${cleanName}`;
+
+            // Build isolated HTML for printing (A4 formatting)
+            const printContainer = document.getElementById('print-container');
+            printContainer.innerHTML = `
+                <div style="font-family: Arial, sans-serif; color: #333; width: 100%; background: white;">
+                    
+                    <!-- Print Header -->
+                    <div style="border-bottom: 2px solid #1e293b; padding-bottom: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <h1 style="margin: 0; color: #1e293b; font-size: 24px; font-weight: bold;">CABIN SERVICE DUTY REPORT</h1>
+                            <p style="margin: 5px 0 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">AeroDuty System Generated</p>
+                        </div>
+                        <div style="text-align: right; font-size: 12px; color: #64748b;">
+                            <p style="margin: 0;"><strong>Date Printed:</strong> ${new Date().toLocaleDateString('id-ID')}</p>
+                            <p style="margin: 0;"><strong>Report ID:</strong> #${report.id}</p>
+                        </div>
+                    </div>
+
+                    <!-- General Info -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold; width: 20%;">Cabin Crew Name</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; width: 30%;">${report.cabinName}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold; width: 20%;">Aircraft Reg</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; width: 30%; font-weight: bold;">${report.aircraftReg}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold;">Start Duty</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatDateOnly(report.startDuty)}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold;">Route</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0;">${report.route}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold;">End Duty</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatDateOnly(report.endDuty)}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold;">Duration</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0;">${report.duration}</td>
+                        </tr>
+                    </table>
+
+                    <!-- Remarks Section -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Pax Remarks</h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 15px;">
+                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Before Flight:</td><td style="padding: 4px 0;">${report.remarkBefore || '-'}</td></tr>
+                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">During Flight:</td><td style="padding: 4px 0;">${report.remarkDuring || '-'}</td></tr>
+                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">After Flight:</td><td style="padding: 4px 0;">${report.remarkAfter || '-'}</td></tr>
+                        </table>
+
+                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">F&B Preferences</h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 15px;">
+                            <tr>
+                                <td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Food Restriction:</td><td style="width: 25%; padding: 4px 0;">${report.foodRes || '-'}</td>
+                                <td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Favorite Food:</td><td style="width: 25%; padding: 4px 0;">${report.favFood || '-'}</td>
+                            </tr>
+                            <tr>
+                                <td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Bev Restriction:</td><td style="width: 25%; padding: 4px 0;">${report.bevRes || '-'}</td>
+                                <td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Favorite Bev:</td><td style="width: 25%; padding: 4px 0;">${report.favBev || '-'}</td>
+                            </tr>
+                        </table>
+
+                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Conclusion & Allowance</h3>
+                        <p style="font-size: 12px; margin: 5px 0;"><strong>Conclusion:</strong> ${report.conclusion || '-'}</p>
+                        <p style="font-size: 12px; margin: 5px 0;"><strong>Allowance Status:</strong> ${report.allowance || '-'}</p>
+                    </div>
+
+                    <!-- Passenger Manifest -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Passenger Manifest (Total: ${report.totalPax})</h3>
+                        <div style="font-size: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${report.passengersList && report.passengersList.length > 0 ? 
+                                report.passengersList.map(p => `<span style="background: #f1f5f9; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 4px;">${p}</span>`).join('') 
+                                : '<i>No passenger data recorded.</i>'
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Image Documentation (avoid page break inside) -->
+                    ${report.documentation && report.documentation.length > 0 ? `
+                    <div style="margin-bottom: 30px; page-break-inside: avoid;">
+                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 15px; color: #0f172a;">Image Documentation</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                            ${report.documentation.map(doc => `
+                                <div style="width: 30%; border: 1px solid #e2e8f0; padding: 8px; text-align: center; box-sizing: border-box;">
+                                    ${doc.imageStr ? `<img src="${doc.imageStr}" style="width: 100%; max-height: 120px; object-fit: cover; margin-bottom: 5px; border-radius: 4px;">` : `<div style="width: 100%; height: 120px; background:#f1f5f9; margin-bottom: 5px;"></div>`}
+                                    <p style="font-size: 10px; font-weight: bold; margin: 0; color: #2563eb;">${doc.position}</p>
+                                    <p style="font-size: 11px; margin: 3px 0 0 0;">${doc.condition}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Signature Area -->
+                    <div style="margin-top: 50px; text-align: right; page-break-inside: avoid;">
+                        <p style="font-size: 12px; margin-bottom: 10px;">Verified By,</p>
+                        ${signUrl ? `<img src="${signUrl}" style="max-height: 60px; max-width: 150px; mix-blend-mode: multiply; margin-bottom: 5px;">` : '<div style="height: 60px;"></div>'}
+                        <p style="font-size: 13px; font-weight: bold; margin: 0;">${report.cabinName}</p>
+                        <p style="font-size: 11px; color: #64748b; margin: 2px 0;">Cabin Crew</p>
+                    </div>
+
+                </div>
+            `;
+
+            printContainer.classList.remove('hidden');
+
+            // Temporarily change document title to set the print filename
+            const originalTitle = document.title;
+            document.title = filename;
+
+            // Trigger Print Dialog
+            setTimeout(() => {
+                window.print();
+                
+                // Cleanup after dialog closes
+                document.title = originalTitle;
+                printContainer.classList.add('hidden');
+                printContainer.innerHTML = ''; 
+                closeModal();
+            }, 100);
+        }
 
         // ================= CRUD DATABASES =================
         function handleAddCabin(e) {
