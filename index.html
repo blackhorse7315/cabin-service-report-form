@@ -36,7 +36,7 @@
             scrollbar-width: none;
         }
 
-        /* Print Styles for Native Vector PDF Generation (No Screenshot) */
+        /* Print Styles for Native Vector PDF Generation */
         @media print {
             body { background: white; }
             body > header, body > nav, body > main { display: none !important; }
@@ -79,7 +79,7 @@
             
             <div class="h-8 w-px bg-gray-200 hidden lg:block"></div>
 
-            <!-- Sync Button (Available for all) -->
+            <!-- Sync Button -->
             <button id="sync-btn" onclick="pullDataFromSheet()" class="hidden md:flex items-center bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors shadow-sm cursor-pointer min-w-[120px] justify-center">
                 <i data-lucide="cloud-sync" class="w-4 h-4 mr-2"></i>
                 <span class="text-sm font-medium">Sync Data</span>
@@ -199,7 +199,6 @@
                     </div>
                     
                     <div class="p-6 md:p-8">
-                        <!-- Status Badge -->
                         <div class="mb-8 p-4 border border-emerald-100 rounded-xl bg-emerald-50/50 flex justify-between items-center">
                             <div class="flex items-center">
                                 <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-4 border border-emerald-200">
@@ -213,7 +212,6 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Setup Database API -->
                             <div class="border border-gray-200 rounded-2xl p-6 hover:shadow-md transition-all hover:border-blue-300">
                                 <h3 class="text-base font-bold text-gray-800 mb-2 flex items-center"><i data-lucide="server" class="w-5 h-5 mr-2 text-blue-600"></i> Integrasi Google Sheets</h3>
                                 <p class="text-sm text-gray-500 mb-5 min-h-[40px]">Kelola URL Web App dari Google Apps Script untuk menghubungkan data Anda ke cloud.</p>
@@ -222,7 +220,6 @@
                                 </button>
                             </div>
 
-                            <!-- Reset Data -->
                             <div class="border border-red-100 rounded-2xl p-6 hover:shadow-md transition-all bg-red-50/30 hover:border-red-300">
                                 <h3 class="text-base font-bold text-red-700 mb-2 flex items-center"><i data-lucide="alert-triangle" class="w-5 h-5 mr-2 text-red-600"></i> Hard Reset / Factory</h3>
                                 <p class="text-sm text-gray-500 mb-5 min-h-[40px]">Menghapus secara paksa seluruh Cache Data Lokal. Tindakan ini tidak dapat dibatalkan!</p>
@@ -313,11 +310,12 @@
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="px-6 md:px-8 py-5 border-b border-gray-100 bg-gray-50/50 flex items-center space-x-3">
                     <div class="p-2 bg-blue-100 rounded-lg text-blue-600"><i data-lucide="file-plus-2" class="w-5 h-5"></i></div>
-                    <h2 class="text-lg font-semibold text-gray-800">Create Duty Report</h2>
+                    <h2 id="form-report-title" class="text-lg font-semibold text-gray-800">Create Duty Report</h2>
                 </div>
                 
                 <div class="p-6 md:p-8">
                     <form id="form-new-report" onsubmit="handleNewReportSubmit(event)">
+                        <input type="hidden" id="edit-report-id" value="">
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             
@@ -441,7 +439,7 @@
                                 <div class="bg-blue-50 p-3 rounded-lg mb-4 flex items-start border border-blue-100">
                                     <i data-lucide="info" class="w-4 h-4 text-blue-500 mr-2 mt-0.5 shrink-0"></i>
                                     <p class="text-xs text-blue-700 leading-relaxed">
-                                        Harap upload foto dalam format <b>Landscape (Mendatar)</b> untuk hasil dokumen PDF yang maksimal. Pilihan posisi otomatis diambil dari <i>Cabin Condition Database</i>.
+                                        Harap upload foto dalam format <b>Landscape (Mendatar)</b>. Sistem akan mengompres ukuran foto secara otomatis agar tidak memberatkan database Google Sheets.
                                     </p>
                                 </div>
                                 
@@ -477,7 +475,7 @@
                                 Clear Form
                             </button>
                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-8 rounded-xl transition-colors flex items-center shadow-md shadow-blue-500/30">
-                                <i data-lucide="send" class="w-4 h-4 mr-2"></i> Submit Report
+                                <i data-lucide="send" class="w-4 h-4 mr-2"></i> <span id="form-submit-text">Submit Report</span>
                             </button>
                         </div>
                     </form>
@@ -783,6 +781,40 @@
             </div>
         </div>
 
+        <!-- Settings Modal for Google Sheets URL -->
+        <div id="settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[120] hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all scale-100 overflow-hidden">
+                <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800 flex items-center"><i data-lucide="database" class="w-5 h-5 mr-2 text-blue-600"></i> Google Sheets Setup</h3>
+                    <button type="button" onclick="closeSettingsModal()" class="text-gray-400 hover:text-red-500 p-2 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-4">Hubungkan aplikasi ini ke Google Sheets Anda agar seluruh data otomatis tersimpan dan tersinkronisasi.</p>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Web App URL (Akhiran /exec)</label>
+                    <input type="url" id="settings-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full rounded-xl border border-gray-300 p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm mb-4 bg-gray-50">
+                    
+                    <div class="bg-blue-50 p-4 rounded-xl text-xs text-blue-800 border border-blue-100">
+                        <p class="font-bold mb-1">Cara Mendapatkan URL:</p>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Buka Google Sheets baru.</li>
+                            <li>Klik <b>Extensions &gt; Apps Script</b>.</li>
+                            <li>Paste kode <b>Code.gs</b> (dari instruksi) lalu Save.</li>
+                            <li>Klik <b>Deploy &gt; New deployment</b>.</li>
+                            <li>Pilih tipe <b>Web app</b>, Execute as: <b>Me</b>, Access: <b>Anyone</b>.</li>
+                            <li>Klik <b>Deploy</b>, copy Web App URL-nya ke kolom di atas.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-100 bg-white flex justify-end">
+                    <button type="button" onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-xl transition-colors shadow-md flex items-center">
+                        <i data-lucide="link" class="w-4 h-4 mr-2"></i> Simpan & Connect
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal for Report Details -->
         <div id="detail-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4 transform transition-all scale-100">
@@ -814,7 +846,7 @@
             cabinCrew: [],
             aircrafts: [],
             passengers: [],
-            cabinPositions: [ // New State Array for Cabin Conditions DB
+            cabinPositions: [ 
                 { id: 1, name: "Galley" },
                 { id: 2, name: "Lavatory A" },
                 { id: 3, name: "Passenger Seat" }
@@ -822,7 +854,7 @@
         };
 
         let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
-        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwsQWNMtuZ6wK24hIcjhiaHErGRTHW3TP-ILTxxLhIMGZhvKcSY462kRRFtbTKpiYTE/exec';
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbyVsCpRFJWZ1TmkKR4m4IGnNV6_MRxC1c3YTzXiUiDxjd0SfP_MMwsMMT3F1nNOCdNz/exec';
         let WEB_APP_URL = localStorage.getItem('aeroDutyWebAppUrl') || DEFAULT_URL;
 
         if (!localStorage.getItem('aeroDutyWebAppUrl')) {
@@ -834,7 +866,6 @@
             saveStateLocal();
         }
 
-        // Pastikan cabinPositions ada meskipun memuat state lama
         if (!appState.cabinPositions) {
             appState.cabinPositions = defaultState.cabinPositions;
             saveStateLocal();
@@ -843,7 +874,12 @@
         let isAdmin = sessionStorage.getItem('aeroAdminAuth') === 'true';
 
         function saveStateLocal() {
-            localStorage.setItem('aeroDutyState3', JSON.stringify(appState));
+            try {
+                localStorage.setItem('aeroDutyState3', JSON.stringify(appState));
+            } catch (error) {
+                console.error("Storage Error:", error);
+                showToast("Memori browser penuh! Kurangi/hapus beberapa foto laporan lama.", "error");
+            }
             updateDashboardStats();
             renderAllDropdowns();
             renderAllTables();
@@ -867,7 +903,7 @@
                 html = `<i data-lucide="check-circle" class="w-4 h-4 mr-2 text-emerald-500"></i><span class="text-sm font-medium text-emerald-600">Synced</span>`;
                 setTimeout(() => setSyncBtn('idle'), 3000);
             } else if(state === 'error') {
-                html = `<i data-lucide="wifi-off" class="w-4 h-4 mr-2 text-red-500"></i><span class="text-sm font-medium text-red-600">Offline Mode</span>`;
+                html = `<i data-lucide="wifi-off" class="w-4 h-4 mr-2 text-amber-500"></i><span class="text-sm font-medium text-amber-600">Offline Mode</span>`;
                 setTimeout(() => setSyncBtn('idle'), 3000);
             } else {
                 html = `<i data-lucide="cloud-sync" class="w-4 h-4 mr-2"></i><span class="text-sm font-medium">Sync Data</span>`;
@@ -879,15 +915,22 @@
 
         // ================= API CALLS TO GOOGLE SHEETS =================
 
+        // Perbaikan: Mencegah CORS Preflight dengan menyederhanakan request headers dan mengatur Timeout Manual
         async function pullDataFromSheet() {
             if (!WEB_APP_URL) return;
             setSyncBtn('syncing');
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // Diperpanjang ke 30 detik
+            
             try {
+                // Hapus custom header 'Accept' untuk mencegah pemblokiran CORS dari Google
                 const response = await fetch(`${WEB_APP_URL}?action=getData`, {
                     method: 'GET',
                     redirect: 'follow',
-                    headers: { 'Accept': 'application/json' }
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
@@ -897,7 +940,7 @@
                     appState.cabinCrew = result.cabinCrew || [];
                     appState.aircrafts = result.aircrafts || [];
                     appState.passengers = result.passengers || [];
-                    appState.cabinPositions = result.cabinPositions || appState.cabinPositions; // Use existing if none
+                    appState.cabinPositions = result.cabinPositions || appState.cabinPositions; 
                     
                     saveStateLocal();
                     showToast("Database berhasil di-sync dari Google Sheets", "success");
@@ -906,9 +949,10 @@
                     throw new Error("Format data tidak sesuai dari Sheets.");
                 }
             } catch (e) {
-                console.warn("Pull/Fetch Terhambat:", e);
+                clearTimeout(timeoutId);
+                console.warn("Pull/Fetch Error (Kemungkinan CORS atau Timeout):", e);
                 saveStateLocal(); 
-                showToast("Gagal terhubung ke Sheets. Berjalan di Offline Mode.", "error");
+                showToast("Gagal terhubung ke Server. Aplikasi berjalan dengan Cache Lokal (Offline Mode).", "error");
                 setSyncBtn('error');
             }
         }
@@ -917,13 +961,18 @@
             if (!WEB_APP_URL) return; 
             setSyncBtn('saving');
             
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // Diperpanjang ke 30 detik maksimal upload data
+
             try {
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'syncData', data: appState }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    redirect: 'follow'
+                    redirect: 'follow',
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
@@ -934,7 +983,8 @@
                     throw new Error(res.message || "Gagal menyimpan di sisi server");
                 }
             } catch (e) {
-                console.warn("Push/Fetch Terhambat:", e);
+                clearTimeout(timeoutId);
+                console.warn("Push/Fetch Error:", e);
                 setSyncBtn('error');
             }
         }
@@ -1030,6 +1080,7 @@
         }
 
         let currentSelectedPax = []; 
+        let tempSelectedPax = []; // Menyimpan state pilihan sementara saat modal terbuka
 
         const pageTitles = {
             'dashboard': 'Dashboard Overview',
@@ -1144,17 +1195,22 @@
             }
         }
 
-        // ================= IMAGE UPLOAD LOGIC =================
+        // ================= IMAGE UPLOAD LOGIC (WITH AUTO COMPRESSOR) =================
         let docIndexCounter = 0;
         
-        // Helper untuk menghasilkan option posisi dari Database Kondisi Kabin
-        function getCabinPositionOptions() {
-            return appState.cabinPositions.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+        function getCabinPositionOptions(selectedValue = '') {
+            return appState.cabinPositions.map(p => `<option value="${p.name}" ${p.name === selectedValue ? 'selected' : ''}>${p.name}</option>`).join('');
         }
 
-        function addDocField() {
+        function addDocField(existingDoc = null) {
             const container = document.getElementById('docs-container');
-            const posOptions = getCabinPositionOptions();
+            const posValue = existingDoc ? existingDoc.position : '';
+            const condValue = existingDoc ? existingDoc.condition : '';
+            const b64Value = existingDoc ? existingDoc.imageStr : '';
+            
+            const previewClass = b64Value ? '' : 'hidden';
+            const reqAttr = b64Value ? '' : 'required';
+            const posOptions = getCabinPositionOptions(posValue);
             
             const html = `
                 <div class="doc-item bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative group" id="doc-${docIndexCounter}">
@@ -1171,14 +1227,14 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Present Condition</label>
-                            <input type="text" class="doc-condition w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 text-sm bg-gray-50 outline-none" placeholder="Kondisi saat ini..." required>
+                            <input type="text" class="doc-condition w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 text-sm bg-gray-50 outline-none" placeholder="Kondisi saat ini..." value="${condValue}" required>
                         </div>
                         <div class="col-span-1 md:col-span-2">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Upload Image (Wajib Landscape)</label>
-                            <input type="file" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" onchange="handleImageUpload(event, ${docIndexCounter})" required>
-                            <input type="hidden" class="doc-b64" id="b64-${docIndexCounter}">
-                            <div class="mt-3 hidden" id="preview-container-${docIndexCounter}">
-                                <img id="preview-${docIndexCounter}" class="rounded-lg border border-gray-200 object-cover w-full h-48 md:w-1/2">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Upload Image (Otomatis Dikompres)</label>
+                            <input type="file" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" onchange="handleImageUpload(event, ${docIndexCounter})" ${reqAttr}>
+                            <input type="hidden" class="doc-b64" id="b64-${docIndexCounter}" value="${b64Value}">
+                            <div class="mt-3 ${previewClass}" id="preview-container-${docIndexCounter}">
+                                <img id="preview-${docIndexCounter}" src="${b64Value}" class="rounded-lg border border-gray-200 object-cover w-full h-48 md:w-1/2">
                             </div>
                         </div>
                     </div>
@@ -1189,18 +1245,45 @@
             docIndexCounter++;
         }
 
+        // Perbaikan Utama: Memaksa Kompresi Gambar Menggunakan Canvas agar lolos dari Limit 50k Sheet Google
         function handleImageUpload(event, index) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const img = document.getElementById(`preview-${index}`);
-                    const container = document.getElementById(`preview-container-${index}`);
-                    const b64Input = document.getElementById(`b64-${index}`);
-                    
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Batasi resolusi maksimal 400px agar payload Base64 sangat ringan
+                        const MAX_DIMENSION = 400;
+                        if (width > height && width > MAX_DIMENSION) {
+                            height = Math.round((height * MAX_DIMENSION) / width);
+                            width = MAX_DIMENSION;
+                        } else if (height > MAX_DIMENSION) {
+                            width = Math.round((width * MAX_DIMENSION) / height);
+                            height = MAX_DIMENSION;
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Simpan dalam format JPEG Kualitas 30% (Kecil namun jelas untuk PDF)
+                        const compressedB64 = canvas.toDataURL('image/jpeg', 0.3);
+                        
+                        const previewImg = document.getElementById(`preview-${index}`);
+                        const container = document.getElementById(`preview-container-${index}`);
+                        const b64Input = document.getElementById(`b64-${index}`);
+                        
+                        previewImg.src = compressedB64;
+                        container.classList.remove('hidden');
+                        b64Input.value = compressedB64;
+                    };
                     img.src = e.target.result;
-                    container.classList.remove('hidden');
-                    b64Input.value = e.target.result;
                 }
                 reader.readAsDataURL(file);
             }
@@ -1209,6 +1292,7 @@
 
         // ================= PASSENGER SELECTOR MODAL LOGIC =================
         function openPaxSelectorModal() {
+            tempSelectedPax = [...currentSelectedPax]; // Clone current state
             document.getElementById('pax-search-input').value = '';
             renderPaxSelectorList('');
             document.getElementById('pax-selector-modal').classList.remove('hidden');
@@ -1241,8 +1325,8 @@
             
             renderPassengerTable();
 
-            if (!currentSelectedPax.includes(fullName)) {
-                currentSelectedPax.push(fullName);
+            if (!tempSelectedPax.includes(fullName)) {
+                tempSelectedPax.push(fullName);
             }
 
             document.getElementById('pax-search-input').value = '';
@@ -1267,11 +1351,11 @@
             }
 
             filteredPax.forEach(p => {
-                const isChecked = currentSelectedPax.includes(p.name) ? 'checked' : '';
+                const isChecked = tempSelectedPax.includes(p.name) ? 'checked' : '';
                 const item = document.createElement('label');
                 item.className = "flex items-center p-3 mb-2 bg-white border border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors";
                 item.innerHTML = `
-                    <input type="checkbox" value="${p.name}" class="pax-checkbox w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3" ${isChecked}>
+                    <input type="checkbox" value="${p.name}" onchange="handlePaxCheckboxChange(this)" class="pax-checkbox w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3" ${isChecked}>
                     <div class="flex flex-col">
                         <span class="font-semibold text-gray-800 text-sm">${p.name}</span>
                         <span class="text-xs text-gray-500">${p.category}</span>
@@ -1281,9 +1365,18 @@
             });
         }
 
+        function handlePaxCheckboxChange(checkbox) {
+            if (checkbox.checked) {
+                if (!tempSelectedPax.includes(checkbox.value)) {
+                    tempSelectedPax.push(checkbox.value);
+                }
+            } else {
+                tempSelectedPax = tempSelectedPax.filter(val => val !== checkbox.value);
+            }
+        }
+
         function confirmPaxSelection() {
-            const checkboxes = document.querySelectorAll('.pax-checkbox:checked');
-            currentSelectedPax = Array.from(checkboxes).map(cb => cb.value);
+            currentSelectedPax = [...tempSelectedPax];
             updateSelectedPaxDisplay();
             document.getElementById('report-total-pax').value = currentSelectedPax.length;
             closePaxSelectorModal();
@@ -1354,6 +1447,9 @@
         // ================= CRUD REPORTS =================
         function resetForm() {
             document.getElementById('form-new-report').reset();
+            document.getElementById('edit-report-id').value = '';
+            document.getElementById('form-report-title').innerText = 'Create Duty Report';
+            document.getElementById('form-submit-text').innerText = 'Submit Report';
             document.getElementById('report-duration').value = '';
             currentSelectedPax = [];
             updateSelectedPaxDisplay();
@@ -1367,6 +1463,7 @@
             e.preventDefault();
             const start = document.getElementById('report-start-duty').value;
             const end = document.getElementById('report-end-duty').value;
+            const editId = document.getElementById('edit-report-id').value;
             
             const startD = new Date(start); startD.setHours(0,0,0,0);
             const endD = new Date(end); endD.setHours(0,0,0,0);
@@ -1388,7 +1485,7 @@
             });
 
             const newReport = {
-                id: Date.now(),
+                id: editId ? parseInt(editId) : Date.now(),
                 cabinName: document.getElementById('report-cabin-name').value,
                 startDuty: start,
                 endDuty: end,
@@ -1408,13 +1505,19 @@
                 conclusion: document.getElementById('report-conclusion').value,
                 allowance: document.getElementById('report-allowance').value,
                 documentation: documentation, // Array of objects
-                createdAt: new Date().toISOString()
+                createdAt: editId ? (appState.reports.find(r => r.id == editId)?.createdAt || new Date().toISOString()) : new Date().toISOString()
             };
 
-            appState.reports.push(newReport);
-            saveState(); 
+            if (editId) {
+                const idx = appState.reports.findIndex(r => r.id == editId);
+                if (idx !== -1) appState.reports[idx] = newReport;
+                showToast("Report updated successfully!");
+            } else {
+                appState.reports.push(newReport);
+                showToast("Report submitted successfully!");
+            }
             
-            showToast("Report submitted successfully!");
+            saveState(); 
             resetForm();
             switchTab('history');
         }
@@ -1472,7 +1575,7 @@
 
         function deleteReport(id) {
             if(confirm('Are you sure you want to delete this report?')) {
-                appState.reports = appState.reports.filter(r => r.id !== id);
+                appState.reports = appState.reports.filter(r => r.id != id);
                 saveState(); 
                 showToast("Report deleted successfully!");
             }
@@ -1480,7 +1583,7 @@
 
         // ================= MODAL & NATIVE PDF PRINT =================
         function viewReportDetail(id) {
-            const report = appState.reports.find(r => r.id === id);
+            const report = appState.reports.find(r => r.id == id);
             if (!report) return;
 
             const crew = appState.cabinCrew.find(c => c.name === report.cabinName);
@@ -1525,6 +1628,18 @@
                         </div>
                     </div>
 
+                    <div class="col-span-2 mt-2">
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-gray-800 font-bold uppercase tracking-wider text-xs flex items-center"><i data-lucide="users" class="w-4 h-4 mr-2 text-indigo-500"></i> Passenger Manifest</p>
+                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-md font-bold border border-gray-200">Total: ${report.totalPax} Pax</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-inner max-h-40 overflow-y-auto">
+                            ${report.passengersList && report.passengersList.length > 0 
+                                ? `<ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">${report.passengersList.map(p => `<li class="flex items-center text-xs text-gray-700"><i data-lucide="user-check" class="w-3 h-3 mr-2 text-indigo-400"></i>${p}</li>`).join('')}</ul>` 
+                                : '<p class="text-gray-400 italic text-center py-4 text-xs">No passenger details recorded on this report.</p>'}
+                        </div>
+                    </div>
+
                     <!-- Pax Remarks Display -->
                     <div class="col-span-2 border border-gray-100 rounded-xl p-4 mt-2">
                         <h4 class="font-bold text-gray-800 text-xs uppercase tracking-wider mb-3 border-b pb-2 flex items-center"><i data-lucide="message-square" class="w-4 h-4 mr-2 text-blue-500"></i> Pax Remarks</h4>
@@ -1553,18 +1668,6 @@
                             ${docsHtml}
                         </div>
                     </div>
-
-                    <div class="col-span-2 mt-2">
-                        <div class="flex justify-between items-center mb-3">
-                            <p class="text-gray-800 font-bold uppercase tracking-wider text-xs flex items-center"><i data-lucide="users" class="w-4 h-4 mr-2 text-indigo-500"></i> Passenger Manifest</p>
-                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-md font-bold border border-gray-200">Total: ${report.totalPax} Pax</span>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-inner max-h-40 overflow-y-auto">
-                            ${report.passengersList && report.passengersList.length > 0 
-                                ? `<ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">${report.passengersList.map(p => `<li class="flex items-center text-xs text-gray-700"><i data-lucide="user-check" class="w-3 h-3 mr-2 text-indigo-400"></i>${p}</li>`).join('')}</ul>` 
-                                : '<p class="text-gray-400 italic text-center py-4 text-xs">No passenger details recorded on this report.</p>'}
-                        </div>
-                    </div>
                     
                     <!-- Conclusion & Allowance -->
                     <div class="col-span-2 border border-gray-100 rounded-xl p-4 mt-2 bg-blue-50/30">
@@ -1587,11 +1690,19 @@
             
             const footer = document.getElementById('modal-footer');
             footer.innerHTML = `
-                <button type="button" onclick="printReportAsPDF(${report.id})" class="px-6 py-2.5 bg-slate-800 text-white border border-transparent rounded-xl hover:bg-slate-900 font-medium transition-colors shadow-md flex items-center">
-                    <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Print as Vector PDF
-                </button>
+                <div class="flex space-x-2">
+                    <button type="button" onclick="editReport(${report.id})" class="px-4 py-2.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl hover:bg-amber-100 font-medium transition-colors shadow-sm flex items-center">
+                        <i data-lucide="edit" class="w-4 h-4 mr-2"></i> Edit
+                    </button>
+                    <button type="button" onclick="deleteReportFromModal(${report.id})" class="px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 font-medium transition-colors shadow-sm flex items-center">
+                        <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> Delete
+                    </button>
+                    <button type="button" onclick="printReportAsPDF(${report.id})" class="px-4 py-2.5 bg-slate-800 text-white border border-transparent rounded-xl hover:bg-slate-900 font-medium transition-colors shadow-md flex items-center">
+                        <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Print
+                    </button>
+                </div>
                 <button type="button" onclick="closeModal()" class="px-6 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors shadow-sm">
-                    Tutup Laporan
+                    Tutup
                 </button>
             `;
 
@@ -1601,10 +1712,65 @@
         }
 
         function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+        
+        function deleteReportFromModal(id) {
+            if(confirm('Are you sure you want to delete this report?')) {
+                appState.reports = appState.reports.filter(r => r.id != id);
+                saveState(); 
+                renderHistoryTable();
+                closeModal();
+                showToast("Report deleted successfully!");
+            }
+        }
+
+        function editReport(id) {
+            const report = appState.reports.find(r => r.id == id);
+            if (!report) return;
+
+            resetForm(); // Bersihkan sisa form sebelumnya jika ada
+
+            document.getElementById('edit-report-id').value = report.id;
+            document.getElementById('form-report-title').innerText = 'Edit Duty Report';
+            document.getElementById('form-submit-text').innerText = 'Update Report';
+
+            document.getElementById('report-cabin-name').value = report.cabinName || '';
+            document.getElementById('report-start-duty').value = report.startDuty || '';
+            document.getElementById('report-end-duty').value = report.endDuty || '';
+            
+            // Trigger perhitungan durasi otomatis
+            const event = new Event('change');
+            document.getElementById('report-start-duty').dispatchEvent(event);
+
+            document.getElementById('report-aircraft').value = report.aircraftReg || '';
+            document.getElementById('report-route').value = report.route || '';
+            
+            currentSelectedPax = [...(report.passengersList || [])];
+            updateSelectedPaxDisplay();
+            document.getElementById('report-total-pax').value = report.totalPax || 0;
+
+            document.getElementById('report-remark-before').value = report.remarkBefore || '';
+            document.getElementById('report-remark-during').value = report.remarkDuring || '';
+            document.getElementById('report-remark-after').value = report.remarkAfter || '';
+            document.getElementById('report-food-res').value = report.foodRes || '';
+            document.getElementById('report-fav-food').value = report.favFood || '';
+            document.getElementById('report-bev-res').value = report.bevRes || '';
+            document.getElementById('report-fav-bev').value = report.favBev || '';
+            document.getElementById('report-conclusion').value = report.conclusion || '';
+            document.getElementById('report-allowance').value = report.allowance || '';
+
+            // Render Documentations ke dalam field form
+            document.getElementById('docs-container').innerHTML = '';
+            if (report.documentation && report.documentation.length > 0) {
+                report.documentation.forEach(doc => addDocField(doc));
+            }
+
+            closeModal();
+            switchTab('add-report');
+        }
 
         // MENGGUNAKAN NATIVE PRINT BROWSER (A4 Vector PDF) BUKAN SCREENSHOT
         function printReportAsPDF(id) {
-            const report = appState.reports.find(r => r.id === id);
+            const report = appState.reports.find(r => r.id == id);
             if (!report) return;
 
             const crew = appState.cabinCrew.find(c => c.name === report.cabinName);
@@ -1652,6 +1818,17 @@
                         </tr>
                     </table>
 
+                    <!-- Passenger Manifest -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Passenger Manifest (Total: ${report.totalPax})</h3>
+                        <div style="font-size: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${report.passengersList && report.passengersList.length > 0 ? 
+                                report.passengersList.map(p => `<span style="background: #f1f5f9; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 4px;">${p}</span>`).join('') 
+                                : '<i>No passenger data recorded.</i>'
+                            }
+                        </div>
+                    </div>
+
                     <!-- Remarks Section -->
                     <div style="margin-bottom: 30px;">
                         <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Pax Remarks</h3>
@@ -1672,17 +1849,6 @@
                         <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Conclusion & Allowance</h3>
                         <p style="font-size: 12px; margin: 5px 0;"><strong>Conclusion:</strong> ${report.conclusion || '-'}</p>
                         <p style="font-size: 12px; margin: 5px 0;"><strong>Allowance Status:</strong> ${report.allowance || '-'}</p>
-                    </div>
-
-                    <!-- Passenger Manifest -->
-                    <div style="margin-bottom: 30px;">
-                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Passenger Manifest (Total: ${report.totalPax})</h3>
-                        <div style="font-size: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
-                            ${report.passengersList && report.passengersList.length > 0 ? 
-                                report.passengersList.map(p => `<span style="background: #f1f5f9; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 4px;">${p}</span>`).join('') 
-                                : '<i>No passenger data recorded.</i>'
-                            }
-                        </div>
                     </div>
 
                     <!-- Image Documentation (avoid page break inside) -->
@@ -1735,23 +1901,23 @@
             showToast("Cabin Crew ditambahkan & tersinkronisasi!");
         }
 
+        // PERBAIKAN KRITIS: Bulk rendering untuk menghindari freeze/stuck
         function renderCabinTable() {
             const tbody = document.getElementById('db-cabin-table');
-            tbody.innerHTML = '';
-            appState.cabinCrew.forEach((c, i) => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4">${i + 1}</td>
-                        <td class="px-6 py-4 font-bold text-gray-800">${c.name}</td>
-                        <td class="px-6 py-4"><a href="${c.signUrl}" target="_blank" class="text-xs text-blue-500 bg-blue-50 px-2 py-1 rounded truncate inline-block max-w-[200px] hover:underline">${c.signUrl}</a></td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="deleteCabin(${c.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
-                        </td>
-                    </tr>`;
-            });
+            const rowsHtml = appState.cabinCrew.map((c, i) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">${i + 1}</td>
+                    <td class="px-6 py-4 font-bold text-gray-800">${c.name}</td>
+                    <td class="px-6 py-4"><a href="${c.signUrl}" target="_blank" class="text-xs text-blue-500 bg-blue-50 px-2 py-1 rounded truncate inline-block max-w-[200px] hover:underline">${c.signUrl}</a></td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="deleteCabin(${c.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            tbody.innerHTML = rowsHtml;
             lucide.createIcons({root: tbody});
         }
-        function deleteCabin(id) { if(confirm('Hapus data ini?')) { appState.cabinCrew = appState.cabinCrew.filter(x => x.id !== id); saveState(); } }
+        function deleteCabin(id) { if(confirm('Hapus data ini?')) { appState.cabinCrew = appState.cabinCrew.filter(x => x.id != id); saveState(); } }
 
         function handleAddAircraft(e) {
             e.preventDefault();
@@ -1761,23 +1927,23 @@
             showToast("Pesawat ditambahkan & tersinkronisasi!");
         }
 
+        // PERBAIKAN KRITIS: Bulk rendering untuk menghindari freeze/stuck
         function renderAircraftTable() {
             const tbody = document.getElementById('db-aircraft-table');
-            tbody.innerHTML = '';
-            appState.aircrafts.forEach((a, i) => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4">${i + 1}</td>
-                        <td class="px-6 py-4 font-bold text-gray-800 uppercase tracking-wider">${a.reg}</td>
-                        <td class="px-6 py-4 font-medium text-gray-600">${a.type}</td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="deleteAircraft(${a.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
-                        </td>
-                    </tr>`;
-            });
+            const rowsHtml = appState.aircrafts.map((a, i) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">${i + 1}</td>
+                    <td class="px-6 py-4 font-bold text-gray-800 uppercase tracking-wider">${a.reg}</td>
+                    <td class="px-6 py-4 font-medium text-gray-600">${a.type}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="deleteAircraft(${a.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            tbody.innerHTML = rowsHtml;
             lucide.createIcons({root: tbody});
         }
-        function deleteAircraft(id) { if(confirm('Hapus data ini?')) { appState.aircrafts = appState.aircrafts.filter(x => x.id !== id); saveState(); } }
+        function deleteAircraft(id) { if(confirm('Hapus data ini?')) { appState.aircrafts = appState.aircrafts.filter(x => x.id != id); saveState(); } }
 
         // ================= CRUD CABIN POSITION DB =================
         function handleAddCabinPosition(e) {
@@ -1792,19 +1958,19 @@
         function renderCabinPositionTable() {
             const tbody = document.getElementById('db-cabin-position-table');
             if(!tbody) return;
-            tbody.innerHTML = '';
+            
             if(appState.cabinPositions && appState.cabinPositions.length > 0) {
-                appState.cabinPositions.forEach((pos, i) => {
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4">${i + 1}</td>
-                            <td class="px-6 py-4 font-bold text-gray-800">${pos.name}</td>
-                            <td class="px-6 py-4 text-center">
-                                <button onclick="editCabinPosition(${pos.id})" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-1.5 rounded mr-2"><i data-lucide="edit-2" class="w-4 h-4 mx-auto"></i></button>
-                                <button onclick="deleteCabinPosition(${pos.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
-                            </td>
-                        </tr>`;
-                });
+                const rowsHtml = appState.cabinPositions.map((pos, i) => `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4">${i + 1}</td>
+                        <td class="px-6 py-4 font-bold text-gray-800">${pos.name}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="editCabinPosition(${pos.id})" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-1.5 rounded mr-2"><i data-lucide="edit-2" class="w-4 h-4 mx-auto"></i></button>
+                            <button onclick="deleteCabinPosition(${pos.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+                tbody.innerHTML = rowsHtml;
                 lucide.createIcons({root: tbody});
             } else {
                 tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Belum ada item posisi kabin.</td></tr>';
@@ -1812,7 +1978,7 @@
         }
 
         function editCabinPosition(id) {
-            const pos = appState.cabinPositions.find(p => p.id === id);
+            const pos = appState.cabinPositions.find(p => p.id == id);
             if(!pos) return;
             const newName = prompt("Edit Nama Posisi Kabin:", pos.name);
             if (newName !== null && newName.trim() !== '') {
@@ -1824,7 +1990,7 @@
 
         function deleteCabinPosition(id) {
             if(confirm('Hapus item posisi kabin ini?')) {
-                appState.cabinPositions = appState.cabinPositions.filter(p => p.id !== id);
+                appState.cabinPositions = appState.cabinPositions.filter(p => p.id != id);
                 saveState();
             }
         }
@@ -1840,12 +2006,12 @@
             showToast("Penumpang ditambahkan & tersinkronisasi!");
         }
 
+        // PERBAIKAN KRITIS UTAMA: Menghilangkan lag luar biasa pada menu Passenger
         function renderPassengerTable() {
             const tbody = document.getElementById('db-passenger-table');
-            tbody.innerHTML = '';
-            appState.passengers.forEach((p, i) => {
+            const rowsHtml = appState.passengers.map((p, i) => {
                 const badge = p.category.includes('Male') ? 'text-blue-700 bg-blue-100 border-blue-200' : 'text-pink-700 bg-pink-100 border-pink-200';
-                tbody.innerHTML += `
+                return `
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">${i + 1}</td>
                         <td class="px-6 py-4 font-bold text-gray-800">${p.name}</td>
@@ -1854,10 +2020,12 @@
                             <button onclick="deletePassenger(${p.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
                         </td>
                     </tr>`;
-            });
+            }).join('');
+            
+            tbody.innerHTML = rowsHtml;
             lucide.createIcons({root: tbody});
         }
-        function deletePassenger(id) { if(confirm('Hapus data ini?')) { appState.passengers = appState.passengers.filter(x => x.id !== id); saveState(); } }
+        function deletePassenger(id) { if(confirm('Hapus data ini?')) { appState.passengers = appState.passengers.filter(x => x.id != id); saveState(); } }
 
     </script>
 </body>
