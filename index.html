@@ -40,7 +40,7 @@
         @media print {
             body { background: white; }
             body > header, body > nav, body > main { display: none !important; }
-            #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #settings-modal, #toast-container { display: none !important; }
+            #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #settings-modal, #toast-container { display: none !important; }
             
             #print-container { 
                 display: block !important; 
@@ -159,7 +159,7 @@
         </nav>
     </div>
 
-    <!-- Main Content Area (Menghapus overflow-y-auto agar memakai scroll alami browser) -->
+    <!-- Main Content Area -->
     <main class="flex-1 p-4 md:p-8 pb-32 bg-gray-50/50 w-full relative">
         
         <!-- Notifikasi Container -->
@@ -475,7 +475,7 @@
 
                         </div>
 
-                        <!-- PERBAIKAN: Tombol Submit Responsif (Tumpuk di HP, Sejajar di PC) -->
+                        <!-- PERBAIKAN: Tombol Submit Responsif -->
                         <div class="flex flex-col-reverse sm:flex-row items-center justify-end mt-8 sm:mt-10 pt-6 border-t border-gray-100 gap-3 sm:gap-4">
                             <button type="button" onclick="resetForm()" class="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-gray-600 font-medium hover:bg-gray-100 transition-colors text-center">
                                 Clear Form
@@ -699,7 +699,7 @@
                                 <th class="px-6 py-4 w-16">No</th>
                                 <th class="px-6 py-4">Full Name (with Title)</th>
                                 <th class="px-6 py-4">Category</th>
-                                <th class="px-6 py-4 text-center">Action</th>
+                                <th class="px-6 py-4 text-center">Action (Edit/Hapus)</th>
                             </tr>
                         </thead>
                         <tbody id="db-passenger-table" class="divide-y divide-gray-50">
@@ -724,13 +724,15 @@
                 
                 <!-- Detail Route & Quick Add -->
                 <div class="p-4 border-b border-gray-100 flex flex-col space-y-4 bg-white shrink-0">
-                    <div class="relative flex-1">
-                        <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
-                        <input type="text" id="pax-search-input" onkeyup="filterPaxList()" placeholder="Cari nama penumpang..." class="w-full rounded-xl border border-gray-300 p-2 pl-9 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <div class="flex space-x-2">
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
+                            <input type="text" id="pax-search-input" onkeyup="filterPaxList()" placeholder="Cari nama penumpang..." class="w-full rounded-xl border border-gray-300 p-2 pl-9 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        <button type="button" onclick="openQuickAddPaxModal()" class="bg-slate-800 hover:bg-slate-900 text-white p-2 rounded-xl transition-colors flex items-center justify-center shrink-0 w-10 shadow-sm" title="Add New Passenger to DB">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
                     </div>
-                    <button type="button" onclick="openQuickAddPaxModal()" class="bg-slate-800 hover:bg-slate-900 text-white p-2 rounded-xl transition-colors flex items-center justify-center shrink-0 w-10 shadow-sm" title="Add New Passenger to DB">
-                        <i data-lucide="plus" class="w-5 h-5"></i>
-                    </button>
                 </div>
 
                 <!-- Scrollable List of Passengers -->
@@ -747,7 +749,7 @@
             </div>
         </div>
 
-        <!-- Modal for Quick Add Pax -->
+        <!-- Quick Add Passenger Modal -->
         <div id="quick-add-pax-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[120] hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm max-h-[90dvh] flex flex-col transform transition-all scale-100 overflow-hidden">
                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
@@ -779,6 +781,47 @@
                         <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 rounded-xl transition-colors shadow-md mt-2">
                             Simpan Penumpang
                         </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Passenger Modal -->
+        <div id="edit-pax-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[115] hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all scale-100 overflow-hidden">
+                <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800 flex items-center"><i data-lucide="user-pen" class="w-5 h-5 mr-2 text-blue-600"></i> Edit Data Penumpang</h3>
+                    <button type="button" onclick="closeEditPaxModal()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="edit-pax-form" onsubmit="handleUpdatePassenger(event)">
+                        <input type="hidden" id="edit-pax-id">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category (Sex & Age)</label>
+                            <select id="edit-pax-sex" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer text-sm">
+                                <option value="Male">Male (Adult)</option>
+                                <option value="Female">Female (Adult)</option>
+                                <option value="Male Infant">Male Infant</option>
+                                <option value="Female Infant">Female Infant</option>
+                                <option value="Male Child">Male Child</option>
+                                <option value="Female Child">Female Child</option>
+                            </select>
+                        </div>
+                        <div class="mb-6 relative">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Name Passenger</label>
+                            <div class="relative">
+                                <span id="edit-pax-title-preview" class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 font-medium text-sm">Mr.</span>
+                                <input type="text" id="edit-pax-name" required placeholder="Nama Lengkap" class="w-full rounded-xl border-gray-200 border p-3 pl-12 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeEditPaxModal()" class="px-5 py-2.5 rounded-xl text-gray-600 font-medium hover:bg-gray-100 transition-colors">Cancel</button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-xl transition-colors shadow-md flex items-center">
+                                <i data-lucide="save" class="w-4 h-4 mr-2"></i> Update Data
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -1209,6 +1252,15 @@
             if(quickSexSelect) {
                 quickSexSelect.addEventListener('change', (e) => {
                     quickTitlePreview.innerText = e.target.value.includes('Female') ? 'Ms.' : 'Mr.';
+                });
+            }
+
+            const editSexSelect = document.getElementById('edit-pax-sex');
+            const editTitlePreview = document.getElementById('edit-pax-title-preview');
+            
+            if(editSexSelect) {
+                editSexSelect.addEventListener('change', (e) => {
+                    editTitlePreview.innerText = e.target.value.includes('Female') ? 'Ms.' : 'Mr.';
                 });
             }
         }
@@ -2038,7 +2090,8 @@
                         <td class="px-6 py-4 font-bold text-gray-800">${p.name}</td>
                         <td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-bold border ${badge}">${p.category}</span></td>
                         <td class="px-6 py-4 text-center">
-                            <button onclick="deletePassenger(${p.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                            <button onclick="openEditPaxModal(${p.id})" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-1.5 rounded mr-2" title="Edit"><i data-lucide="edit-2" class="w-4 h-4 mx-auto"></i></button>
+                            <button onclick="deletePassenger(${p.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Delete"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
                         </td>
                     </tr>`;
             }).join('');
@@ -2047,6 +2100,58 @@
             lucide.createIcons({root: tbody});
         }
         function deletePassenger(id) { if(confirm('Hapus data ini?')) { appState.passengers = appState.passengers.filter(x => x.id != id); saveState(); } }
+
+        // ================= EDIT PASSENGER LOGIC =================
+        function openEditPaxModal(id) {
+            const pax = appState.passengers.find(p => p.id == id);
+            if (!pax) return;
+
+            document.getElementById('edit-pax-id').value = pax.id;
+            document.getElementById('edit-pax-sex').value = pax.category;
+            
+            // Extract raw name without "Mr. " or "Ms. "
+            let rawName = pax.name;
+            if (rawName.startsWith('Mr. ')) rawName = rawName.substring(4);
+            else if (rawName.startsWith('Ms. ')) rawName = rawName.substring(4);
+            
+            document.getElementById('edit-pax-name').value = rawName;
+            document.getElementById('edit-pax-title-preview').innerText = pax.category.includes('Female') ? 'Ms.' : 'Mr.';
+            
+            document.getElementById('edit-pax-modal').classList.remove('hidden');
+        }
+
+        function closeEditPaxModal() {
+            document.getElementById('edit-pax-modal').classList.add('hidden');
+        }
+
+        function handleUpdatePassenger(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-pax-id').value);
+            const sex = document.getElementById('edit-pax-sex').value;
+            const name = document.getElementById('edit-pax-name').value;
+            const prefix = sex.includes('Female') ? 'Ms.' : 'Mr.';
+            const fullName = `${prefix} ${name}`;
+
+            const index = appState.passengers.findIndex(p => p.id == id);
+            if (index !== -1) {
+                // Keep old name reference to update selected array if needed
+                const oldName = appState.passengers[index].name;
+                
+                appState.passengers[index].name = fullName;
+                appState.passengers[index].category = sex;
+
+                // Auto update selected passenger array in Add Report form if it was selected
+                const selIndex = currentSelectedPax.indexOf(oldName);
+                if (selIndex !== -1) {
+                    currentSelectedPax[selIndex] = fullName;
+                    updateSelectedPaxDisplay();
+                }
+
+                saveState(); 
+                closeEditPaxModal();
+                showToast("Data penumpang berhasil diperbarui!", "success");
+            }
+        }
 
     </script>
 </body>
