@@ -540,8 +540,14 @@
                             <input type="email" id="new-cabin-email" required placeholder="email@example.com" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
                         <div class="flex-1 w-full">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Signature (URL Format)</label>
-                            <input type="url" id="new-cabin-sign" required placeholder="https://example.com/sign.png" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Signature (URL / &lt;img&gt; Tag)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="new-cabin-sign" required placeholder="Paste URL atau tag <img>" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none" oninput="processSignatureUrl('new-cabin-sign', 'new-sign-preview')">
+                                <div class="w-16 h-12 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center shrink-0 overflow-hidden relative" title="Signature Preview">
+                                    <img id="new-sign-preview" src="" class="max-w-full max-h-full object-contain hidden mix-blend-multiply z-10" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')">
+                                    <i data-lucide="image" class="w-5 h-5 text-gray-400 absolute"></i>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-8 rounded-xl transition-colors whitespace-nowrap w-full lg:w-auto shadow-md">
                             Tambah Data
@@ -861,8 +867,14 @@
                             <input type="email" id="edit-cabin-email" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         </div>
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Signature (URL Format)</label>
-                            <input type="url" id="edit-cabin-sign" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Signature (URL / &lt;img&gt; Tag)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="edit-cabin-sign" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm" oninput="processSignatureUrl('edit-cabin-sign', 'edit-sign-preview')">
+                                <div class="w-16 h-12 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center shrink-0 overflow-hidden relative" title="Signature Preview">
+                                    <img id="edit-sign-preview" src="" class="max-w-full max-h-full object-contain hidden mix-blend-multiply z-10" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')">
+                                    <i data-lucide="image" class="w-5 h-5 text-gray-400 absolute"></i>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex justify-end space-x-3">
                             <button type="button" onclick="closeEditCabinModal()" class="px-5 py-2.5 rounded-xl text-gray-600 font-medium hover:bg-gray-100 transition-colors">Cancel</button>
@@ -964,7 +976,7 @@
         };
 
         let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
-        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwbuS4Vhhkyv5lMVKD9Ox9soqeBM6cCM03eTAihgH1J3F-OJc8gf-84wHA8ZaTM8Y-c/exec';
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbybpwt3ft7WqarQSpojxRcRdhnc1EdYgVvZ74h4_F7SGoqRmG87LT69Ssftj9NKUEqi/exec';
         let WEB_APP_URL = localStorage.getItem('aeroDutyWebAppUrl') || DEFAULT_URL;
 
         if (!localStorage.getItem('aeroDutyWebAppUrl')) {
@@ -982,6 +994,17 @@
         }
         
         let isAdmin = sessionStorage.getItem('aeroAdminAuth') === 'true';
+
+        // HELPER: Perbaiki format URL Google Drive agar selalu menggunakan lh3 (terhindar blokir CORS)
+        function getSafeImageUrl(url) {
+            if (!url) return '#';
+            // Cek jika ini adalah url lama model uc?export=view
+            const ucMatch = url.match(/drive\.google\.com\/uc\?export=view&id=([a-zA-Z0-9_-]+)/i);
+            if (ucMatch && ucMatch[1]) {
+                return `https://lh3.googleusercontent.com/d/${ucMatch[1]}`;
+            }
+            return url;
+        }
 
         function saveStateLocal() {
             try {
@@ -1076,7 +1099,7 @@
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'syncData', data: appState }),
-                    headers: { 'Content-Type': 'text-plain;charset=utf-8' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     redirect: 'follow',
                     signal: controller.signal
                 });
@@ -1094,6 +1117,8 @@
                 clearTimeout(timeoutId);
                 console.warn("Push/Fetch Error:", e);
                 setSyncBtn('error');
+                // Tampilkan pesan error pasti dari Server jika Google Sheets menolak
+                showToast("Sync Gagal: " + e.message, "error");
             }
         }
 
@@ -1404,6 +1429,7 @@
             docIndexCounter++;
         }
 
+        // Kompresi Gambar Menggunakan Canvas agar lolos dari Limit 50k Sheet Google
         function handleImageUpload(event, index) {
             const file = event.target.files[0];
             if (file) {
@@ -1415,7 +1441,8 @@
                         let width = img.width;
                         let height = img.height;
                         
-                        const MAX_DIMENSION = 400;
+                        // Ekstra Kompresi: Resolusi maksimal 250px agar payload Base64 sangat ringan (Aman untuk G-Sheet)
+                        const MAX_DIMENSION = 250;
                         if (width > height && width > MAX_DIMENSION) {
                             height = Math.round((height * MAX_DIMENSION) / width);
                             width = MAX_DIMENSION;
@@ -1429,7 +1456,8 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        const compressedB64 = canvas.toDataURL('image/jpeg', 0.3);
+                        // Ekstra Kompresi: Kualitas gambar 20%
+                        const compressedB64 = canvas.toDataURL('image/jpeg', 0.2);
                         
                         const previewImg = document.getElementById(`preview-${index}`);
                         const container = document.getElementById(`preview-container-${index}`);
@@ -1663,9 +1691,15 @@
                 }
             });
 
+            // AMBIL DATA SIGNATURE DARI CREW YANG DIPILIH
+            const selectedCabinName = document.getElementById('report-cabin-name').value;
+            const selectedCrew = appState.cabinCrew.find(c => c && c.name === selectedCabinName);
+            const cabinSignUrl = selectedCrew ? selectedCrew.signUrl : '';
+
             const newReport = {
                 id: editId ? parseInt(editId) : Date.now(),
-                cabinName: document.getElementById('report-cabin-name').value,
+                cabinName: selectedCabinName,
+                cabinSignUrl: cabinSignUrl, // Simpan URL signature langsung ke dalam laporan
                 startDuty: start,
                 endDuty: end,
                 duration: document.getElementById('report-duration').value,
@@ -1696,7 +1730,7 @@
                 showToast("Report submitted successfully!");
             }
             
-            saveState(); 
+            saveState(); // Simpan ke local dan otomatis jalankan Push (syncData) ke Google Sheets
             resetForm();
             switchTab('history');
         }
@@ -1760,7 +1794,9 @@
             if(confirm('Are you sure you want to delete this report?')) {
                 appState.reports = appState.reports.filter(r => r && r.id != id);
                 saveState(); 
+                
                 showToast("Report deleted successfully!");
+                renderHistoryTable(); // Refresh UI
             }
         }
 
@@ -1769,8 +1805,16 @@
             const report = appState.reports.find(r => r && r.id == id);
             if (!report) return;
 
-            const crew = appState.cabinCrew ? appState.cabinCrew.find(c => c && c.name === report.cabinName) : null;
-            const signUrl = crew && crew.signUrl ? crew.signUrl : '#';
+            // Prioritaskan signature yang tersimpan di laporan, fallback ke DB Crew (untuk data lama)
+            let signUrl = report.cabinSignUrl;
+            if (!signUrl) {
+                const crew = appState.cabinCrew ? appState.cabinCrew.find(c => c && c.name === report.cabinName) : null;
+                signUrl = crew && crew.signUrl ? crew.signUrl : '#';
+            }
+            if (!signUrl) signUrl = '#';
+            
+            // Format ulang link agar terhindar dari block CORS browser
+            signUrl = getSafeImageUrl(signUrl);
 
             const content = document.getElementById('modal-content');
             
@@ -1859,7 +1903,7 @@
                     <div class="col-span-1 md:col-span-2 flex flex-col items-end mt-4 pt-4 border-t border-gray-100">
                         <p class="text-gray-500 text-xs font-bold mb-2 uppercase">Verified Signature</p>
                         <div class="w-40 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white text-xs text-gray-400 overflow-hidden relative">
-                            ${crew && signUrl !== '#' ? `<img src="${signUrl}" alt="Sign" onerror="this.outerHTML='<span class=\\'px-2 text-center\\'>[Invalid Signature URL]</span>'" class="max-h-full max-w-full object-contain mix-blend-multiply">` : 'No Signature'}
+                            ${signUrl !== '#' && signUrl !== '' ? `<img src="${signUrl}" alt="Sign" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<span class=&quot;text-red-500 font-bold text-xs&quot;>[Gagal Muat URL]</span>');" class="max-h-full max-w-full object-contain mix-blend-multiply">` : 'No Signature'}
                         </div>
                         <p class="text-[10px] text-gray-400 mt-1">${report.cabinName || '-'}</p>
                     </div>
@@ -1874,10 +1918,13 @@
                 <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-2 sm:gap-3">
                     <div class="flex gap-2 w-full sm:w-auto">
                         <button type="button" onclick="editReport(${report.id})" class="flex-1 sm:flex-none justify-center px-4 py-3 sm:py-2.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl hover:bg-amber-100 font-medium transition-colors shadow-sm flex items-center">
-                            <i data-lucide="edit" class="w-4 h-4 mr-2"></i> Edit
+                            <i data-lucide="edit" class="w-4 h-4 sm:mr-2"></i> <span class="hidden sm:inline">Edit</span>
+                        </button>
+                        <button type="button" onclick="duplicateReport(${report.id})" class="flex-1 sm:flex-none justify-center px-4 py-3 sm:py-2.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl hover:bg-indigo-100 font-medium transition-colors shadow-sm flex items-center" title="Duplikat Laporan">
+                            <i data-lucide="copy" class="w-4 h-4 sm:mr-2"></i> <span class="hidden sm:inline">Duplicate</span>
                         </button>
                         <button type="button" onclick="deleteReportFromModal(${report.id})" class="flex-1 sm:flex-none justify-center px-4 py-3 sm:py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 font-medium transition-colors shadow-sm flex items-center">
-                            <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> Delete
+                            <i data-lucide="trash-2" class="w-4 h-4 sm:mr-2"></i> <span class="hidden sm:inline">Delete</span>
                         </button>
                     </div>
                     <button type="button" onclick="printReportAsPDF(${report.id})" class="w-full sm:w-auto justify-center px-4 py-3 sm:py-2.5 bg-slate-800 text-white border border-transparent rounded-xl hover:bg-slate-900 font-medium transition-colors shadow-md flex items-center">
@@ -1897,10 +1944,58 @@
             if(confirm('Are you sure you want to delete this report?')) {
                 appState.reports = appState.reports.filter(r => r && r.id != id);
                 saveState(); 
+                
                 renderHistoryTable();
                 closeModal();
                 showToast("Report deleted successfully!");
             }
+        }
+
+        function duplicateReport(id) {
+            const report = appState.reports.find(r => r && r.id == id);
+            if (!report) return;
+
+            resetForm(); 
+
+            // ID dibiarkan KOSONG agar tersimpan sebagai laporan baru (bukan ditimpa)
+            document.getElementById('edit-report-id').value = '';
+            document.getElementById('form-report-title').innerText = 'Duplicate Duty Report';
+            document.getElementById('form-submit-text').innerText = 'Submit Duplicated Report';
+
+            // Salin seluruh isi data
+            document.getElementById('report-cabin-name').value = report.cabinName || '';
+            document.getElementById('report-start-duty').value = report.startDuty || '';
+            document.getElementById('report-end-duty').value = report.endDuty || '';
+            
+            const event = new Event('change');
+            document.getElementById('report-start-duty').dispatchEvent(event);
+
+            document.getElementById('report-aircraft').value = report.aircraftReg || '';
+            document.getElementById('report-route').value = report.route || '';
+            
+            currentSelectedPax = [...(report.passengersList || [])];
+            updateSelectedPaxDisplay();
+            document.getElementById('report-total-pax').value = report.totalPax || 0;
+
+            document.getElementById('report-remark-before').value = report.remarkBefore || '';
+            document.getElementById('report-remark-during').value = report.remarkDuring || '';
+            document.getElementById('report-remark-after').value = report.remarkAfter || '';
+            document.getElementById('report-food-res').value = report.foodRes || '';
+            document.getElementById('report-fav-food').value = report.favFood || '';
+            document.getElementById('report-bev-res').value = report.bevRes || '';
+            document.getElementById('report-fav-bev').value = report.favBev || '';
+            document.getElementById('report-conclusion').value = report.conclusion || '';
+            document.getElementById('report-allowance').value = report.allowance || '';
+
+            // Salin foto dokumentasi
+            document.getElementById('docs-container').innerHTML = '';
+            if (report.documentation && Array.isArray(report.documentation) && report.documentation.length > 0) {
+                report.documentation.forEach(doc => addDocField(doc));
+            }
+
+            closeModal();
+            switchTab('add-report');
+            showToast("Laporan berhasil disalin! Silakan sesuaikan datanya dan klik Submit.", "success");
         }
 
         function editReport(id) {
@@ -1950,8 +2045,16 @@
             const report = appState.reports.find(r => r && r.id == id);
             if (!report) return;
 
-            const crew = appState.cabinCrew ? appState.cabinCrew.find(c => c && c.name === report.cabinName) : null;
-            const signUrl = crew ? crew.signUrl : '';
+            // Prioritaskan signature yang tersimpan di laporan, fallback ke DB Crew (untuk data lama)
+            let signUrl = report.cabinSignUrl;
+            if (!signUrl) {
+                const crew = appState.cabinCrew ? appState.cabinCrew.find(c => c && c.name === report.cabinName) : null;
+                signUrl = crew ? crew.signUrl : '#';
+            }
+            if (!signUrl) signUrl = '#';
+            
+            // Format ulang link agar terhindar dari block CORS browser
+            signUrl = getSafeImageUrl(signUrl);
 
             const cleanRoute = (report.route || 'ROUTE').replace(/[^a-zA-Z0-9-]/g, '').replace(/\s+/g, '');
             const cleanName = (report.cabinName || 'CREW').replace(/\s+/g, '_');
@@ -2074,7 +2177,7 @@
                     <!-- SIGNATURE -->
                     <div style="margin-top: 40px; padding-top: 20px; text-align: right; page-break-inside: avoid;">
                         <p style="font-size: 11px; margin-bottom: 10px; color: #64748b;">Verified By,</p>
-                        ${signUrl && signUrl !== '#' ? `<img src="${signUrl}" style="max-height: 70px; max-width: 180px; mix-blend-mode: multiply; margin-bottom: 5px;">` : '<div style="height: 70px;"></div>'}
+                        ${signUrl !== '#' && signUrl !== '' ? `<img src="${signUrl}" style="max-height: 70px; max-width: 180px; mix-blend-mode: multiply; margin-bottom: 5px;" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<div style=&quot;color:red; font-size:10px; height:70px; display:flex; align-items:center; justify-content:flex-end;&quot;>[Gagal Muat URL]</div>');">` : '<div style="height: 70px; display: flex; align-items: center; justify-content: flex-end; color: #94a3b8; font-size: 10px;">[No Signature]</div>'}
                         <p style="font-size: 13px; font-weight: bold; margin: 0; color: #0f172a; text-decoration: underline;">${report.cabinName || '-'}</p>
                         <p style="font-size: 11px; color: #64748b; margin: 4px 0;">Cabin Crew / Transwisata Prima Aviation</p>
                     </div>
@@ -2110,7 +2213,46 @@
             document.getElementById('new-cabin-name').value = ''; 
             document.getElementById('new-cabin-email').value = ''; 
             document.getElementById('new-cabin-sign').value = '';
+            processSignatureUrl('new-cabin-sign', 'new-sign-preview'); // Reset preview
             showToast("Cabin Crew ditambahkan & tersinkronisasi!");
+        }
+
+        // Fungsi pintar untuk mendeteksi tag <img> atau link Google Drive dan mengekstrak/convert URL-nya
+        function processSignatureUrl(inputId, previewId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            const icon = preview.nextElementSibling;
+            let val = input.value.trim();
+
+            // 1. Cek menggunakan regex jika pengguna mem-paste tag <img src="...">
+            const imgTagMatch = val.match(/<img[^>]+src=["']([^"']+)["']/i);
+            if (imgTagMatch && imgTagMatch[1]) {
+                val = imgTagMatch[1].trim(); 
+            }
+
+            // 2. Cek jika URL adalah link sharing Google Drive biasa, ubah menjadi direct image link (lh3.googleusercontent.com)
+            const driveMatch = val.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)/i);
+            if (driveMatch && driveMatch[1]) {
+                const fileId = driveMatch[1];
+                // FORMAT TERBARU: Lebih stabil dan tidak diblokir CORS oleh Browser HTML modern
+                val = `https://lh3.googleusercontent.com/d/${fileId}`;
+            }
+
+            // Otomatis timpa nilai input menjadi URL bersih/direct link
+            if (input.value !== val) {
+                input.value = val;
+            }
+
+            // Tampilkan preview gambar
+            if (val) {
+                preview.src = val;
+                preview.classList.remove('hidden');
+                if(icon) icon.classList.add('hidden');
+            } else {
+                preview.src = '';
+                preview.classList.add('hidden');
+                if(icon) icon.classList.remove('hidden');
+            }
         }
 
         function renderCabinTable() {
@@ -2148,6 +2290,7 @@
             document.getElementById('edit-cabin-name').value = crew.name || '';
             document.getElementById('edit-cabin-email').value = crew.email || '';
             document.getElementById('edit-cabin-sign').value = crew.signUrl || '';
+            processSignatureUrl('edit-cabin-sign', 'edit-sign-preview'); // Panggil preview saat modal dibuka
             document.getElementById('edit-cabin-modal').classList.remove('hidden');
         }
 
