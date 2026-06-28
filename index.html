@@ -40,7 +40,7 @@
         @media print {
             body { background: white; min-width: 800px !important; margin: 0; padding: 0; }
             body > header, body > nav, body > main { display: none !important; }
-            #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #settings-modal, #toast-container { display: none !important; }
+            #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #toast-container { display: none !important; }
             
             #print-container { 
                 display: block !important; 
@@ -530,16 +530,20 @@
                 <div class="absolute right-0 top-0 w-32 h-32 bg-blue-50 rounded-bl-full opacity-50 z-0"></div>
                 <div class="relative z-10">
                     <h3 class="text-lg font-semibold mb-6 flex items-center"><i data-lucide="user-plus" class="w-5 h-5 mr-2 text-blue-600"></i> Tambah Data Kabin Baru</h3>
-                    <form onsubmit="handleAddCabin(event)" class="flex flex-col md:flex-row gap-4 items-end">
+                    <form onsubmit="handleAddCabin(event)" class="flex flex-col lg:flex-row gap-4 items-end">
                         <div class="flex-1 w-full">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                             <input type="text" id="new-cabin-name" required placeholder="Nama Lengkap" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
                         <div class="flex-1 w-full">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="new-cabin-email" required placeholder="email@example.com" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div class="flex-1 w-full">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Signature (URL Format)</label>
                             <input type="url" id="new-cabin-sign" required placeholder="https://example.com/sign.png" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
-                        <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-8 rounded-xl transition-colors whitespace-nowrap w-full md:w-auto shadow-md">
+                        <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-8 rounded-xl transition-colors whitespace-nowrap w-full lg:w-auto shadow-md">
                             Tambah Data
                         </button>
                     </form>
@@ -556,8 +560,9 @@
                             <tr>
                                 <th class="px-6 py-4 w-16">No</th>
                                 <th class="px-6 py-4">Name</th>
+                                <th class="px-6 py-4">Email</th>
                                 <th class="px-6 py-4">Sign URL</th>
-                                <th class="px-6 py-4 text-center">Action</th>
+                                <th class="px-6 py-4 text-center">Action (Edit/Hapus)</th>
                             </tr>
                         </thead>
                         <tbody id="db-cabin-table" class="divide-y divide-gray-50">
@@ -601,7 +606,7 @@
                                 <th class="px-6 py-4 w-16">No</th>
                                 <th class="px-6 py-4">Registration</th>
                                 <th class="px-6 py-4">Type</th>
-                                <th class="px-6 py-4 text-center">Action</th>
+                                <th class="px-6 py-4 text-center">Action (Edit/Hapus)</th>
                             </tr>
                         </thead>
                         <tbody id="db-aircraft-table" class="divide-y divide-gray-50">
@@ -632,8 +637,12 @@
             </div>
             
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <h3 class="font-semibold text-gray-800">Daftar Item Kabin</h3>
+                    <div class="relative w-full sm:w-64">
+                        <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2.5"></i>
+                        <input type="text" id="search-cabin-position" onkeyup="renderCabinPositionTable()" placeholder="Cari posisi kabin..." class="w-full rounded-lg border-gray-300 border p-2 pl-9 text-sm focus:ring-2 focus:ring-sky-500 outline-none bg-white">
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-gray-600">
@@ -689,8 +698,12 @@
             </div>
             
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <h3 class="font-semibold text-gray-800">Daftar Penumpang</h3>
+                    <div class="relative w-full sm:w-64">
+                        <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2.5"></i>
+                        <input type="text" id="search-passenger" onkeyup="renderPassengerTable()" placeholder="Cari nama/kategori..." class="w-full rounded-lg border-gray-300 border p-2 pl-9 text-sm focus:ring-2 focus:ring-amber-500 outline-none bg-white">
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-gray-600">
@@ -827,6 +840,72 @@
             </div>
         </div>
 
+        <!-- Edit Cabin Crew Modal -->
+        <div id="edit-cabin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[115] hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all scale-100 overflow-hidden">
+                <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800 flex items-center"><i data-lucide="user-pen" class="w-5 h-5 mr-2 text-blue-600"></i> Edit Data Kabin</h3>
+                    <button type="button" onclick="closeEditCabinModal()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="edit-cabin-form" onsubmit="handleUpdateCabin(event)">
+                        <input type="hidden" id="edit-cabin-id">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <input type="text" id="edit-cabin-name" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <input type="email" id="edit-cabin-email" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Signature (URL Format)</label>
+                            <input type="url" id="edit-cabin-sign" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeEditCabinModal()" class="px-5 py-2.5 rounded-xl text-gray-600 font-medium hover:bg-gray-100 transition-colors">Cancel</button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-xl transition-colors shadow-md flex items-center">
+                                <i data-lucide="save" class="w-4 h-4 mr-2"></i> Update Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Aircraft Modal -->
+        <div id="edit-aircraft-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[115] hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all scale-100 overflow-hidden">
+                <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800 flex items-center"><i data-lucide="plane" class="w-5 h-5 mr-2 text-blue-600"></i> Edit Data Pesawat</h3>
+                    <button type="button" onclick="closeEditAircraftModal()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="edit-aircraft-form" onsubmit="handleUpdateAircraft(event)">
+                        <input type="hidden" id="edit-aircraft-id">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Registration</label>
+                            <input type="text" id="edit-aircraft-reg" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm uppercase">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Aircraft Type</label>
+                            <input type="text" id="edit-aircraft-type" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeEditAircraftModal()" class="px-5 py-2.5 rounded-xl text-gray-600 font-medium hover:bg-gray-100 transition-colors">Cancel</button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-xl transition-colors shadow-md flex items-center">
+                                <i data-lucide="save" class="w-4 h-4 mr-2"></i> Update Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal for API Settings -->
         <div id="settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90dvh] flex flex-col transform transition-all scale-100 overflow-hidden">
@@ -885,7 +964,7 @@
         };
 
         let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
-        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxWz7usImNfCtdzrabRq1kDF48qfKLgmcL7THmNXtwBpAGlbdRfy8eBr_vi6qYo78wZ/exec';
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwbuS4Vhhkyv5lMVKD9Ox9soqeBM6cCM03eTAihgH1J3F-OJc8gf-84wHA8ZaTM8Y-c/exec';
         let WEB_APP_URL = localStorage.getItem('aeroDutyWebAppUrl') || DEFAULT_URL;
 
         if (!localStorage.getItem('aeroDutyWebAppUrl')) {
@@ -1483,12 +1562,16 @@
         // ================= RENDERERS =================
         function renderAllDropdowns() {
             const cabinSelect = document.getElementById('report-cabin-name');
-            cabinSelect.innerHTML = '<option value="">-- Select Cabin Crew --</option>';
-            appState.cabinCrew.forEach(crew => { cabinSelect.innerHTML += `<option value="${crew.name}">${crew.name}</option>`; });
+            if(cabinSelect) {
+                cabinSelect.innerHTML = '<option value="">-- Select Cabin Crew --</option>';
+                appState.cabinCrew.forEach(crew => { cabinSelect.innerHTML += `<option value="${crew.name}">${crew.name}</option>`; });
+            }
 
             const acSelect = document.getElementById('report-aircraft');
-            acSelect.innerHTML = '<option value="">-- Select Aircraft --</option>';
-            appState.aircrafts.forEach(ac => { acSelect.innerHTML += `<option value="${ac.reg}">${ac.reg} (${ac.type})</option>`; });
+            if(acSelect) {
+                acSelect.innerHTML = '<option value="">-- Select Aircraft --</option>';
+                appState.aircrafts.forEach(ac => { acSelect.innerHTML += `<option value="${ac.reg}">${ac.reg} (${ac.type})</option>`; });
+            }
         }
 
         function renderAllTables() {
@@ -1499,12 +1582,21 @@
         }
 
         function updateDashboardStats() {
-            document.getElementById('stat-reports').innerText = appState.reports.length;
-            document.getElementById('stat-crew').innerText = appState.cabinCrew.length;
-            document.getElementById('stat-aircrafts').innerText = appState.aircrafts.length;
-            document.getElementById('stat-passengers').innerText = appState.passengers.length;
+            const statReports = document.getElementById('stat-reports');
+            if(statReports) statReports.innerText = appState.reports.length;
+            
+            const statCrew = document.getElementById('stat-crew');
+            if(statCrew) statCrew.innerText = appState.cabinCrew.length;
+            
+            const statAircrafts = document.getElementById('stat-aircrafts');
+            if(statAircrafts) statAircrafts.innerText = appState.aircrafts.length;
+            
+            const statPassengers = document.getElementById('stat-passengers');
+            if(statPassengers) statPassengers.innerText = appState.passengers.length;
 
             const tbody = document.getElementById('dashboard-recent-table');
+            if(!tbody) return;
+            
             tbody.innerHTML = '';
             const recent = [...appState.reports].sort((a,b) => b.id - a.id).slice(0, 5); 
             
@@ -1604,6 +1696,9 @@
         function renderHistoryTable() {
             const tbody = document.getElementById('history-table-body');
             const emptyState = document.getElementById('history-empty');
+            
+            if(!tbody || !emptyState) return;
+            
             tbody.innerHTML = '';
 
             if (appState.reports.length === 0) {
@@ -1964,21 +2059,31 @@
         // ================= CRUD DATABASES =================
         function handleAddCabin(e) {
             e.preventDefault();
-            appState.cabinCrew.push({ id: Date.now(), name: document.getElementById('new-cabin-name').value, signUrl: document.getElementById('new-cabin-sign').value });
+            appState.cabinCrew.push({ 
+                id: Date.now(), 
+                name: document.getElementById('new-cabin-name').value, 
+                email: document.getElementById('new-cabin-email').value,
+                signUrl: document.getElementById('new-cabin-sign').value 
+            });
             saveState(); 
-            document.getElementById('new-cabin-name').value = ''; document.getElementById('new-cabin-sign').value = '';
+            document.getElementById('new-cabin-name').value = ''; 
+            document.getElementById('new-cabin-email').value = ''; 
+            document.getElementById('new-cabin-sign').value = '';
             showToast("Cabin Crew ditambahkan & tersinkronisasi!");
         }
 
         function renderCabinTable() {
             const tbody = document.getElementById('db-cabin-table');
+            if(!tbody) return;
             const rowsHtml = appState.cabinCrew.map((c, i) => `
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">${i + 1}</td>
                     <td class="px-6 py-4 font-bold text-gray-800">${c.name}</td>
+                    <td class="px-6 py-4 text-blue-600">${c.email || '-'}</td>
                     <td class="px-6 py-4"><a href="${c.signUrl}" target="_blank" class="text-xs text-blue-500 bg-blue-50 px-2 py-1 rounded truncate inline-block max-w-[200px] hover:underline">${c.signUrl}</a></td>
                     <td class="px-6 py-4 text-center">
-                        <button onclick="deleteCabin(${c.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                        <button onclick="openEditCabinModal(${c.id})" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-1.5 rounded mr-2" title="Edit"><i data-lucide="edit-2" class="w-4 h-4 mx-auto"></i></button>
+                        <button onclick="deleteCabin(${c.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Delete"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -1986,6 +2091,38 @@
             lucide.createIcons({root: tbody});
         }
         function deleteCabin(id) { if(confirm('Hapus data ini?')) { appState.cabinCrew = appState.cabinCrew.filter(x => x.id != id); saveState(); } }
+
+        function openEditCabinModal(id) {
+            const crew = appState.cabinCrew.find(c => c.id == id);
+            if (!crew) return;
+            document.getElementById('edit-cabin-id').value = crew.id;
+            document.getElementById('edit-cabin-name').value = crew.name;
+            document.getElementById('edit-cabin-email').value = crew.email || '';
+            document.getElementById('edit-cabin-sign').value = crew.signUrl;
+            document.getElementById('edit-cabin-modal').classList.remove('hidden');
+        }
+
+        function closeEditCabinModal() {
+            document.getElementById('edit-cabin-modal').classList.add('hidden');
+        }
+
+        function handleUpdateCabin(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-cabin-id').value);
+            const name = document.getElementById('edit-cabin-name').value;
+            const email = document.getElementById('edit-cabin-email').value;
+            const signUrl = document.getElementById('edit-cabin-sign').value;
+
+            const index = appState.cabinCrew.findIndex(c => c.id == id);
+            if (index !== -1) {
+                appState.cabinCrew[index].name = name;
+                appState.cabinCrew[index].email = email;
+                appState.cabinCrew[index].signUrl = signUrl;
+                saveState();
+                closeEditCabinModal();
+                showToast("Data Cabin Crew berhasil diperbarui!", "success");
+            }
+        }
 
         function handleAddAircraft(e) {
             e.preventDefault();
@@ -1997,13 +2134,15 @@
 
         function renderAircraftTable() {
             const tbody = document.getElementById('db-aircraft-table');
+            if(!tbody) return;
             const rowsHtml = appState.aircrafts.map((a, i) => `
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">${i + 1}</td>
                     <td class="px-6 py-4 font-bold text-gray-800 uppercase tracking-wider">${a.reg}</td>
                     <td class="px-6 py-4 font-medium text-gray-600">${a.type}</td>
                     <td class="px-6 py-4 text-center">
-                        <button onclick="deleteAircraft(${a.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                        <button onclick="openEditAircraftModal(${a.id})" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-1.5 rounded mr-2" title="Edit"><i data-lucide="edit-2" class="w-4 h-4 mx-auto"></i></button>
+                        <button onclick="deleteAircraft(${a.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Delete"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -2011,6 +2150,35 @@
             lucide.createIcons({root: tbody});
         }
         function deleteAircraft(id) { if(confirm('Hapus data ini?')) { appState.aircrafts = appState.aircrafts.filter(x => x.id != id); saveState(); } }
+
+        function openEditAircraftModal(id) {
+            const ac = appState.aircrafts.find(a => a.id == id);
+            if (!ac) return;
+            document.getElementById('edit-aircraft-id').value = ac.id;
+            document.getElementById('edit-aircraft-reg').value = ac.reg;
+            document.getElementById('edit-aircraft-type').value = ac.type;
+            document.getElementById('edit-aircraft-modal').classList.remove('hidden');
+        }
+
+        function closeEditAircraftModal() {
+            document.getElementById('edit-aircraft-modal').classList.add('hidden');
+        }
+
+        function handleUpdateAircraft(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-aircraft-id').value);
+            const reg = document.getElementById('edit-aircraft-reg').value.toUpperCase();
+            const type = document.getElementById('edit-aircraft-type').value;
+
+            const index = appState.aircrafts.findIndex(a => a.id == id);
+            if (index !== -1) {
+                appState.aircrafts[index].reg = reg;
+                appState.aircrafts[index].type = type;
+                saveState();
+                closeEditAircraftModal();
+                showToast("Data Pesawat berhasil diperbarui!", "success");
+            }
+        }
 
         // ================= CRUD CABIN POSITION DB =================
         function handleAddCabinPosition(e) {
@@ -2026,19 +2194,28 @@
             const tbody = document.getElementById('db-cabin-position-table');
             if(!tbody) return;
             
+            const searchInput = document.getElementById('search-cabin-position');
+            const query = searchInput ? searchInput.value.toLowerCase() : '';
+            
             if(appState.cabinPositions && appState.cabinPositions.length > 0) {
-                const rowsHtml = appState.cabinPositions.map((pos, i) => `
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4">${i + 1}</td>
-                        <td class="px-6 py-4 font-bold text-gray-800">${pos.name}</td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="editCabinPosition(${pos.id})" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-1.5 rounded mr-2"><i data-lucide="edit-2" class="w-4 h-4 mx-auto"></i></button>
-                            <button onclick="deleteCabinPosition(${pos.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
-                        </td>
-                    </tr>
-                `).join('');
-                tbody.innerHTML = rowsHtml;
-                lucide.createIcons({root: tbody});
+                const filteredPos = appState.cabinPositions.filter(p => p.name.toLowerCase().includes(query));
+                
+                if (filteredPos.length > 0) {
+                    const rowsHtml = filteredPos.map((pos, i) => `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4">${i + 1}</td>
+                            <td class="px-6 py-4 font-bold text-gray-800">${pos.name}</td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="editCabinPosition(${pos.id})" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-1.5 rounded mr-2"><i data-lucide="edit-2" class="w-4 h-4 mx-auto"></i></button>
+                                <button onclick="deleteCabinPosition(${pos.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    tbody.innerHTML = rowsHtml;
+                    lucide.createIcons({root: tbody});
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Pencarian tidak ditemukan.</td></tr>';
+                }
             } else {
                 tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-400">Belum ada item posisi kabin.</td></tr>';
             }
@@ -2078,7 +2255,22 @@
 
         function renderPassengerTable() {
             const tbody = document.getElementById('db-passenger-table');
-            const rowsHtml = appState.passengers.map((p, i) => {
+            if (!tbody) return;
+
+            const searchInput = document.getElementById('search-passenger');
+            const query = searchInput ? searchInput.value.toLowerCase() : '';
+
+            const filteredPax = appState.passengers.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                p.category.toLowerCase().includes(query)
+            );
+
+            if (filteredPax.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">Pencarian tidak ditemukan atau penumpang kosong.</td></tr>';
+                return;
+            }
+
+            const rowsHtml = filteredPax.map((p, i) => {
                 const badge = p.category.includes('Male') ? 'text-blue-700 bg-blue-100 border-blue-200' : 'text-pink-700 bg-pink-100 border-pink-200';
                 return `
                     <tr class="hover:bg-gray-50">
