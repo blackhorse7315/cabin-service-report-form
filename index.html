@@ -1958,94 +1958,125 @@
             const filename = `CSDuty_Report_${report.aircraftReg || 'AC'}_${cleanRoute}_${cleanName}`;
 
             const printContainer = document.getElementById('print-container');
+            
+            // DESAIN BARU: Kop Surat, A4 Format, Tabel Profesional
             printContainer.innerHTML = `
-                <div style="font-family: Arial, sans-serif; color: #333; width: 800px; margin: 0 auto; background: white; padding: 20px;">
+                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 20mm; box-sizing: border-box; position: relative;">
                     
-                    <div style="border-bottom: 2px solid #1e293b; padding-bottom: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
-                        <div>
-                            <h1 style="margin: 0; color: #1e293b; font-size: 24px; font-weight: bold;">CABIN SERVICE DUTY REPORT</h1>
-                            <p style="margin: 5px 0 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">AeroDuty System Generated</p>
-                        </div>
-                        <div style="text-align: right; font-size: 12px; color: #64748b;">
-                            <p style="margin: 0;"><strong>Date Printed:</strong> ${new Date().toLocaleDateString('id-ID')}</p>
-                            <p style="margin: 0;"><strong>Report ID:</strong> #${report.id}</p>
-                        </div>
+                    <!-- HEADER / KOP SURAT -->
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo" style="height: 60px; object-fit: contain; margin-bottom: 10px;" />
+                        <h1 style="margin: 0; font-size: 20px; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 1px;">Cabin Service Report Form</h1>
+                        <h2 style="margin: 4px 0; font-size: 16px; font-weight: 600; color: #334155;">Transwisata Prima Aviation</h2>
+                        <h3 style="margin: 0; font-size: 13px; font-weight: 500; color: #64748b;">Operation Division</h3>
                     </div>
 
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px;">
+                    <!-- ELEGANT HORIZONTAL LINE -->
+                    <div style="border-top: 2px solid #1e40af; border-bottom: 1px solid #93c5fd; height: 2px; margin-bottom: 25px;"></div>
+
+                    <!-- META INFO -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; font-size: 11px; color: #64748b;">
+                        <div><strong>Date Printed:</strong> ${new Date().toLocaleDateString('id-ID')}</div>
+                        <div><strong>Report ID:</strong> #${report.id}</div>
+                    </div>
+
+                    <!-- DUTY & FLIGHT INFO -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 12px;">
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold; width: 20%;">Cabin Crew Name</td>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0; width: 30%;">${report.cabinName || '-'}</td>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold; width: 20%;">Aircraft Reg</td>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0; width: 30%; font-weight: bold;">${report.aircraftReg || '-'}</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; width: 22%; color: #334155;">Cabin Crew Name</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1; width: 28%;">${report.cabinName || '-'}</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; width: 22%; color: #334155;">Aircraft Reg</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1; width: 28%; font-weight: bold;">${report.aircraftReg || '-'}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold;">Start Duty</td>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatDateOnly(report.startDuty)}</td>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold;">Route</td>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0;">${report.route || '-'}</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #334155;">Start Duty</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1;">${formatDateOnly(report.startDuty)}</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #334155;">Route</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1;">${report.route || '-'}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold;">End Duty</td>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatDateOnly(report.endDuty)}</td>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold;">Duration</td>
-                            <td style="padding: 8px; border: 1px solid #e2e8f0;">${report.duration || '-'}</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #334155;">End Duty</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1;">${formatDateOnly(report.endDuty)}</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #334155;">Duration</td>
+                            <td style="padding: 10px 12px; border: 1px solid #cbd5e1;">${report.duration || '-'}</td>
                         </tr>
                     </table>
 
-                    <div style="margin-bottom: 30px;">
-                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Passenger Manifest (Total: ${report.totalPax || 0})</h3>
-                        <div style="font-size: 12px;">
+                    <!-- PASSENGER MANIFEST -->
+                    <div style="margin-bottom: 25px;">
+                        <div style="background: #1e293b; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; margin-bottom: 10px;">
+                            Passenger Manifest (Total: ${report.totalPax || 0} Pax)
+                        </div>
+                        <div style="font-size: 11px; padding: 0 10px;">
                             ${report.passengersList && Array.isArray(report.passengersList) && report.passengersList.length > 0 ? 
-                                `<ol style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                                    ${report.passengersList.map(p => `<li style="margin-bottom: 4px;">${p}</li>`).join('')}
+                                `<ol style="margin: 0; padding-left: 20px; line-height: 1.8; columns: 2; -webkit-columns: 2; -moz-columns: 2;">
+                                    ${report.passengersList.map(p => `<li style="margin-bottom: 4px; break-inside: avoid;">${p}</li>`).join('')}
                                 </ol>` 
                                 : '<i>No passenger data recorded.</i>'
                             }
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 30px;">
-                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Pax Remarks</h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 15px;">
-                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Before Flight:</td><td style="padding: 4px 0; white-space: pre-wrap;">${report.remarkBefore || '-'}</td></tr>
-                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">During Flight:</td><td style="padding: 4px 0; white-space: pre-wrap;">${report.remarkDuring || '-'}</td></tr>
-                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">After Flight:</td><td style="padding: 4px 0; white-space: pre-wrap;">${report.remarkAfter || '-'}</td></tr>
+                    <!-- PAX REMARKS -->
+                    <div style="margin-bottom: 25px;">
+                        <div style="background: #f1f5f9; border-left: 4px solid #3b82f6; padding: 6px 12px; font-size: 13px; font-weight: bold; margin-bottom: 10px; color: #0f172a;">
+                            Pax Remarks
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tr><td style="width: 22%; font-weight: bold; padding: 6px 10px; vertical-align: top; border-bottom: 1px solid #f1f5f9;">Before Flight:</td><td style="padding: 6px 10px; white-space: pre-wrap; border-bottom: 1px solid #f1f5f9;">${report.remarkBefore || '-'}</td></tr>
+                            <tr><td style="width: 22%; font-weight: bold; padding: 6px 10px; vertical-align: top; border-bottom: 1px solid #f1f5f9;">During Flight:</td><td style="padding: 6px 10px; white-space: pre-wrap; border-bottom: 1px solid #f1f5f9;">${report.remarkDuring || '-'}</td></tr>
+                            <tr><td style="width: 22%; font-weight: bold; padding: 6px 10px; vertical-align: top;">After Flight:</td><td style="padding: 6px 10px; white-space: pre-wrap;">${report.remarkAfter || '-'}</td></tr>
                         </table>
-
-                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">F&B Preferences</h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 15px;">
-                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Food Restriction:</td><td style="padding: 4px 0; white-space: pre-wrap;">${report.foodRes || '-'}</td></tr>
-                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Favorite Food:</td><td style="padding: 4px 0; white-space: pre-wrap;">${report.favFood || '-'}</td></tr>
-                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Bev Restriction:</td><td style="padding: 4px 0; white-space: pre-wrap;">${report.bevRes || '-'}</td></tr>
-                            <tr><td style="width: 25%; font-weight: bold; padding: 4px 0; vertical-align: top;">Favorite Bev:</td><td style="padding: 4px 0; white-space: pre-wrap;">${report.favBev || '-'}</td></tr>
-                        </table>
-
-                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 10px; color: #0f172a;">Allowance & Conclusion</h3>
-                        <p style="font-size: 12px; margin: 5px 0;"><strong>Allowance Status:</strong> ${report.allowance || '-'}</p>
-                        <p style="font-size: 12px; margin: 5px 0; white-space: pre-wrap;"><strong>Conclusion:</strong><br>${report.conclusion || '-'}</p>
                     </div>
 
+                    <!-- F&B PREFERENCES -->
+                    <div style="margin-bottom: 25px;">
+                        <div style="background: #fff7ed; border-left: 4px solid #f59e0b; padding: 6px 12px; font-size: 13px; font-weight: bold; margin-bottom: 10px; color: #0f172a;">
+                            F&B Preferences
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tr><td style="width: 22%; font-weight: bold; padding: 6px 10px; vertical-align: top; border-bottom: 1px solid #fff7ed;">Food Restriction:</td><td style="padding: 6px 10px; white-space: pre-wrap; border-bottom: 1px solid #fff7ed;">${report.foodRes || '-'}</td></tr>
+                            <tr><td style="width: 22%; font-weight: bold; padding: 6px 10px; vertical-align: top; border-bottom: 1px solid #fff7ed;">Favorite Food:</td><td style="padding: 6px 10px; white-space: pre-wrap; border-bottom: 1px solid #fff7ed;">${report.favFood || '-'}</td></tr>
+                            <tr><td style="width: 22%; font-weight: bold; padding: 6px 10px; vertical-align: top; border-bottom: 1px solid #fff7ed;">Bev Restriction:</td><td style="padding: 6px 10px; white-space: pre-wrap; border-bottom: 1px solid #fff7ed;">${report.bevRes || '-'}</td></tr>
+                            <tr><td style="width: 22%; font-weight: bold; padding: 6px 10px; vertical-align: top;">Favorite Bev:</td><td style="padding: 6px 10px; white-space: pre-wrap;">${report.favBev || '-'}</td></tr>
+                        </table>
+                    </div>
+
+                    <!-- ALLOWANCE & CONCLUSION -->
+                    <div style="margin-bottom: 30px;">
+                        <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 6px 12px; font-size: 13px; font-weight: bold; margin-bottom: 10px; color: #0f172a;">
+                            Allowance & Conclusion
+                        </div>
+                        <div style="padding: 0 10px; font-size: 12px;">
+                            <p style="margin: 0 0 8px 0;"><strong>Allowance Status:</strong> <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${report.allowance || '-'}</span></p>
+                            <p style="margin: 0;"><strong>Conclusion:</strong><br><span style="white-space: pre-wrap; display: inline-block; margin-top: 4px;">${report.conclusion || '-'}</span></p>
+                        </div>
+                    </div>
+
+                    <!-- IMAGE DOCUMENTATION -->
                     ${report.documentation && Array.isArray(report.documentation) && report.documentation.length > 0 ? `
                     <div style="margin-bottom: 30px; page-break-inside: avoid;">
-                        <h3 style="font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 15px; color: #0f172a;">Image Documentation</h3>
-                        <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                        <div style="background: #faf5ff; border-left: 4px solid #a855f7; padding: 6px 12px; font-size: 13px; font-weight: bold; margin-bottom: 15px; color: #0f172a;">
+                            Image Documentation
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; padding: 0 10px;">
                             ${report.documentation.map(doc => `
-                                <div style="width: 48%; border: 1px solid #e2e8f0; padding: 8px; text-align: center; box-sizing: border-box; border-radius: 6px;">
-                                    ${doc.imageStr ? `<img src="${doc.imageStr}" style="width: 100%; height: 200px; object-fit: cover; margin-bottom: 8px; border-radius: 4px;">` : `<div style="width: 100%; height: 200px; background:#f1f5f9; margin-bottom: 8px;"></div>`}
-                                    <p style="font-size: 11px; font-weight: bold; margin: 0; color: #2563eb; text-transform: uppercase;">${doc.position || '-'}</p>
-                                    <p style="font-size: 12px; margin: 5px 0 0 0;">${doc.condition || '-'}</p>
+                                <div style="width: 47%; border: 1px solid #e2e8f0; padding: 8px; text-align: center; box-sizing: border-box; border-radius: 6px; background: #fff;">
+                                    ${doc.imageStr ? `<img src="${doc.imageStr}" style="width: 100%; height: 160px; object-fit: cover; margin-bottom: 8px; border-radius: 4px; border: 1px solid #f1f5f9;">` : `<div style="width: 100%; height: 160px; background:#f1f5f9; margin-bottom: 8px;"></div>`}
+                                    <p style="font-size: 10px; font-weight: bold; margin: 0; color: #475569; text-transform: uppercase;">${doc.position || '-'}</p>
+                                    <p style="font-size: 11px; margin: 4px 0 0 0; color: #64748b;">${doc.condition || '-'}</p>
                                 </div>
                             `).join('')}
                         </div>
                     </div>
                     ` : ''}
 
-                    <div style="margin-top: 50px; text-align: right; page-break-inside: avoid;">
-                        <p style="font-size: 12px; margin-bottom: 10px;">Verified By,</p>
-                        ${signUrl && signUrl !== '#' ? `<img src="${signUrl}" style="max-height: 60px; max-width: 150px; mix-blend-mode: multiply; margin-bottom: 5px;">` : '<div style="height: 60px;"></div>'}
-                        <p style="font-size: 13px; font-weight: bold; margin: 0;">${report.cabinName || '-'}</p>
-                        <p style="font-size: 11px; color: #64748b; margin: 2px 0;">Cabin Crew</p>
+                    <!-- SIGNATURE -->
+                    <div style="margin-top: 40px; padding-top: 20px; text-align: right; page-break-inside: avoid;">
+                        <p style="font-size: 11px; margin-bottom: 10px; color: #64748b;">Verified By,</p>
+                        ${signUrl && signUrl !== '#' ? `<img src="${signUrl}" style="max-height: 70px; max-width: 180px; mix-blend-mode: multiply; margin-bottom: 5px;">` : '<div style="height: 70px;"></div>'}
+                        <p style="font-size: 13px; font-weight: bold; margin: 0; color: #0f172a; text-decoration: underline;">${report.cabinName || '-'}</p>
+                        <p style="font-size: 11px; color: #64748b; margin: 4px 0;">Cabin Crew / Transwisata Prima Aviation</p>
                     </div>
 
                 </div>
