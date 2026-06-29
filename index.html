@@ -1691,10 +1691,13 @@
                 }
             });
 
-            // AMBIL DATA SIGNATURE DARI CREW YANG DIPILIH
-            const selectedCabinName = document.getElementById('report-cabin-name').value;
-            const selectedCrew = appState.cabinCrew.find(c => c && c.name === selectedCabinName);
-            const cabinSignUrl = selectedCrew ? selectedCrew.signUrl : '';
+            // PERBAIKAN: Gunakan .trim() untuk membersihkan spasi dari keyboard hp
+            const selectedCabinName = document.getElementById('report-cabin-name').value.trim();
+            const selectedCrew = appState.cabinCrew.find(c => c && c.name.trim().toLowerCase() === selectedCabinName.toLowerCase());
+            let cabinSignUrl = selectedCrew ? selectedCrew.signUrl : '';
+            
+            // Format URL sejak awal disubmit agar seragam
+            cabinSignUrl = getSafeImageUrl(cabinSignUrl);
 
             const newReport = {
                 id: editId ? parseInt(editId) : Date.now(),
@@ -1703,8 +1706,8 @@
                 startDuty: start,
                 endDuty: end,
                 duration: document.getElementById('report-duration').value,
-                aircraftReg: document.getElementById('report-aircraft').value,
-                route: document.getElementById('report-route').value,
+                aircraftReg: document.getElementById('report-aircraft').value.trim(),
+                route: document.getElementById('report-route').value.trim(),
                 totalPax: document.getElementById('report-total-pax').value,
                 passengersList: [...currentSelectedPax],
                 remarkBefore: document.getElementById('report-remark-before').value,
@@ -1805,13 +1808,13 @@
             const report = appState.reports.find(r => r && r.id == id);
             if (!report) return;
 
-            // Prioritaskan signature yang tersimpan di laporan, fallback ke DB Crew (untuk data lama)
+            // PERBAIKAN: Deteksi ketat jika signUrl kosong, cari ulang menggunakan .trim()
             let signUrl = report.cabinSignUrl;
-            if (!signUrl) {
-                const crew = appState.cabinCrew ? appState.cabinCrew.find(c => c && c.name === report.cabinName) : null;
+            if (!signUrl || signUrl.trim() === '' || signUrl === '#') {
+                const reportName = (report.cabinName || '').trim().toLowerCase();
+                const crew = appState.cabinCrew ? appState.cabinCrew.find(c => c && c.name.trim().toLowerCase() === reportName) : null;
                 signUrl = crew && crew.signUrl ? crew.signUrl : '#';
             }
-            if (!signUrl) signUrl = '#';
             
             // Format ulang link agar terhindar dari block CORS browser
             signUrl = getSafeImageUrl(signUrl);
@@ -1903,7 +1906,7 @@
                     <div class="col-span-1 md:col-span-2 flex flex-col items-end mt-4 pt-4 border-t border-gray-100">
                         <p class="text-gray-500 text-xs font-bold mb-2 uppercase">Verified Signature</p>
                         <div class="w-40 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white text-xs text-gray-400 overflow-hidden relative">
-                            ${signUrl !== '#' && signUrl !== '' ? `<img src="${signUrl}" alt="Sign" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<span class=&quot;text-red-500 font-bold text-xs&quot;>[Gagal Muat URL]</span>');" class="max-h-full max-w-full object-contain mix-blend-multiply">` : 'No Signature'}
+                            ${signUrl !== '#' && signUrl !== '' ? `<img src="${signUrl}" alt="Sign" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'text-red-500 font-bold text-[10px] text-center\\'>Gagal Muat URL</span>';" class="max-h-full max-w-full object-contain mix-blend-multiply">` : 'No Signature'}
                         </div>
                         <p class="text-[10px] text-gray-400 mt-1">${report.cabinName || '-'}</p>
                     </div>
@@ -2045,15 +2048,14 @@
             const report = appState.reports.find(r => r && r.id == id);
             if (!report) return;
 
-            // Prioritaskan signature yang tersimpan di laporan, fallback ke DB Crew (untuk data lama)
+            // PERBAIKAN LOGIKA YANG SAMA PADA PRINT PDF
             let signUrl = report.cabinSignUrl;
-            if (!signUrl) {
-                const crew = appState.cabinCrew ? appState.cabinCrew.find(c => c && c.name === report.cabinName) : null;
-                signUrl = crew ? crew.signUrl : '#';
+            if (!signUrl || signUrl.trim() === '' || signUrl === '#') {
+                const reportName = (report.cabinName || '').trim().toLowerCase();
+                const crew = appState.cabinCrew ? appState.cabinCrew.find(c => c && c.name.trim().toLowerCase() === reportName) : null;
+                signUrl = crew && crew.signUrl ? crew.signUrl : '#';
             }
-            if (!signUrl) signUrl = '#';
             
-            // Format ulang link agar terhindar dari block CORS browser
             signUrl = getSafeImageUrl(signUrl);
 
             const cleanRoute = (report.route || 'ROUTE').replace(/[^a-zA-Z0-9-]/g, '').replace(/\s+/g, '');
@@ -2177,7 +2179,7 @@
                     <!-- SIGNATURE -->
                     <div style="margin-top: 40px; padding-top: 20px; text-align: right; page-break-inside: avoid;">
                         <p style="font-size: 11px; margin-bottom: 10px; color: #64748b;">Verified By,</p>
-                        ${signUrl !== '#' && signUrl !== '' ? `<img src="${signUrl}" style="max-height: 70px; max-width: 180px; mix-blend-mode: multiply; margin-bottom: 5px;" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<div style=&quot;color:red; font-size:10px; height:70px; display:flex; align-items:center; justify-content:flex-end;&quot;>[Gagal Muat URL]</div>');">` : '<div style="height: 70px; display: flex; align-items: center; justify-content: flex-end; color: #94a3b8; font-size: 10px;">[No Signature]</div>'}
+                        ${signUrl !== '#' && signUrl !== '' ? `<img src="${signUrl}" style="max-height: 70px; max-width: 180px; mix-blend-mode: multiply; margin-bottom: 5px;" onerror="this.onerror=null; this.outerHTML='<div style=\\'color:red; font-size:10px; height:70px; display:flex; align-items:center; justify-content:flex-end;\\'>[Gagal Muat URL]</div>';">` : '<div style="height: 70px; display: flex; align-items: center; justify-content: flex-end; color: #94a3b8; font-size: 10px;">[No Signature]</div>'}
                         <p style="font-size: 13px; font-weight: bold; margin: 0; color: #0f172a; text-decoration: underline;">${report.cabinName || '-'}</p>
                         <p style="font-size: 11px; color: #64748b; margin: 4px 0;">Cabin Crew / Transwisata Prima Aviation</p>
                     </div>
