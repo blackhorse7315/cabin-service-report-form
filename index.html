@@ -38,14 +38,26 @@
 
         /* Print Styles for Native Vector PDF Generation */
         @media print {
-            body { background: white; margin: 0; padding: 0; min-width: 100% !important; }
-            #app-header-nav, #app-main, #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #toast-container { display: none !important; }
+            html, body { 
+                background: white !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                width: 100% !important; 
+                height: auto !important; 
+                min-height: auto !important; 
+                overflow: visible !important; 
+                display: block !important; /* Mencegah bug flexbox blank di mobile */
+            }
+            #app-header-nav, #app-main, #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #toast-container { 
+                display: none !important; 
+            }
             
             #print-container { 
                 display: block !important; 
                 width: 100% !important; 
                 margin: 0 auto;
                 position: relative; 
+                visibility: visible !important;
             }
             #print-container > div {
                 width: 100% !important;
@@ -2219,13 +2231,32 @@
             const originalTitle = document.title;
             document.title = filename;
 
+            // PERBAIKAN TIMING: Memberi waktu (800ms) untuk peramban mobile (iOS/Android) 
+            // agar bisa me-render konten PDF dengan sempurna sebelum membuka dialog Print
             setTimeout(() => {
                 window.print();
-                document.title = originalTitle;
-                printContainer.classList.add('hidden');
-                printContainer.innerHTML = ''; 
-                closeModal();
-            }, 100);
+                
+                // Gunakan event standar HTML5 onafterprint untuk membersihkan
+                // Ini memastikan container hanya dihapus SETELAH user menutup dialog PDF
+                window.onafterprint = () => {
+                    document.title = originalTitle;
+                    printContainer.classList.add('hidden');
+                    printContainer.innerHTML = ''; 
+                    closeModal(); // Tutup juga modalnya
+                    window.onafterprint = null; 
+                };
+
+                // Fallback Timer Darurat (Bila HP lawas gagal memicu onafterprint)
+                setTimeout(() => {
+                    document.title = originalTitle;
+                    if (!printContainer.classList.contains('hidden')) {
+                        printContainer.classList.add('hidden');
+                        printContainer.innerHTML = ''; 
+                        closeModal();
+                    }
+                }, 5000); 
+
+            }, 800); 
         }
 
         // ================= CRUD DATABASES =================
