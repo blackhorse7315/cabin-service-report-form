@@ -976,7 +976,7 @@
         };
 
         let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
-        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbybpwt3ft7WqarQSpojxRcRdhnc1EdYgVvZ74h4_F7SGoqRmG87LT69Ssftj9NKUEqi/exec';
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwt_GjZGBsLXHa-kuHDpqK5Sh_RO9ipN_GUaYzWR4nYNcgeZw2SnV7pvTMrm4XcRgkE/exec';
         let WEB_APP_URL = localStorage.getItem('aeroDutyWebAppUrl') || DEFAULT_URL;
 
         if (!localStorage.getItem('aeroDutyWebAppUrl')) {
@@ -995,14 +995,38 @@
         
         let isAdmin = sessionStorage.getItem('aeroAdminAuth') === 'true';
 
-        // HELPER: Perbaiki format URL Google Drive agar selalu menggunakan lh3 (terhindar blokir CORS)
+        // HELPER: Perbaiki format URL Google Drive agar selalu menggunakan endpoint Thumbnail (Anti-CORS / Anti-Blokir)
         function getSafeImageUrl(url) {
             if (!url) return '#';
-            // Cek jika ini adalah url lama model uc?export=view
-            const ucMatch = url.match(/drive\.google\.com\/uc\?export=view&id=([a-zA-Z0-9_-]+)/i);
-            if (ucMatch && ucMatch[1]) {
-                return `https://lh3.googleusercontent.com/d/${ucMatch[1]}`;
+            url = url.trim();
+            if (url === '') return '#';
+            
+            // Jika sudah berupa link thumbnail, biarkan saja
+            if (url.includes('drive.google.com/thumbnail')) return url;
+
+            // Ekstrak ID dari berbagai format link Google Drive (Drive Web, Link Sharing, lh3, dll)
+            let fileId = null;
+            const regexes = [
+                /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i,
+                /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/i,
+                /drive\.google\.com\/uc\?.*id=([a-zA-Z0-9_-]+)/i,
+                /lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/i
+            ];
+
+            for (let rx of regexes) {
+                const match = url.match(rx);
+                if (match && match[1]) {
+                    fileId = match[1];
+                    break;
+                }
             }
+
+            if (fileId) {
+                // Menggunakan endpoint thumbnail Google Drive yang paling tahan blokir CORS
+                // Parameter sz=w1000 digunakan agar kualitas gambar tetap tinggi (lebar max 1000px)
+                return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+            }
+            
             return url;
         }
 
@@ -2209,7 +2233,8 @@
                 id: Date.now(), 
                 name: document.getElementById('new-cabin-name').value, 
                 email: document.getElementById('new-cabin-email').value,
-                signUrl: document.getElementById('new-cabin-sign').value 
+                // Langsung bersihkan dan format URL saat disimpan
+                signUrl: getSafeImageUrl(document.getElementById('new-cabin-sign').value)
             });
             saveState(); 
             document.getElementById('new-cabin-name').value = ''; 
@@ -2232,13 +2257,9 @@
                 val = imgTagMatch[1].trim(); 
             }
 
-            // 2. Cek jika URL adalah link sharing Google Drive biasa, ubah menjadi direct image link (lh3.googleusercontent.com)
-            const driveMatch = val.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)/i);
-            if (driveMatch && driveMatch[1]) {
-                const fileId = driveMatch[1];
-                // FORMAT TERBARU: Lebih stabil dan tidak diblokir CORS oleh Browser HTML modern
-                val = `https://lh3.googleusercontent.com/d/${fileId}`;
-            }
+            // 2. Format menjadi link yang aman (Thumbnail Google Drive)
+            val = getSafeImageUrl(val);
+            if (val === '#') val = '';
 
             // Otomatis timpa nilai input menjadi URL bersih/direct link
             if (input.value !== val) {
@@ -2305,7 +2326,8 @@
             const id = parseInt(document.getElementById('edit-cabin-id').value);
             const name = document.getElementById('edit-cabin-name').value;
             const email = document.getElementById('edit-cabin-email').value;
-            const signUrl = document.getElementById('edit-cabin-sign').value;
+            // Langsung bersihkan dan format URL saat diedit
+            const signUrl = getSafeImageUrl(document.getElementById('edit-cabin-sign').value);
 
             const index = appState.cabinCrew.findIndex(c => c && c.id == id);
             if (index !== -1) {
