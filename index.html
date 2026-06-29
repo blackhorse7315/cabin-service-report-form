@@ -38,15 +38,18 @@
 
         /* Print Styles for Native Vector PDF Generation */
         @media print {
-            body { background: white; min-width: 800px !important; margin: 0; padding: 0; }
-            body > header, body > nav, body > main { display: none !important; }
-            #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #toast-container { display: none !important; }
+            body { background: white; margin: 0; padding: 0; min-width: 100% !important; }
+            #app-header-nav, #app-main, #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #toast-container { display: none !important; }
             
             #print-container { 
                 display: block !important; 
-                width: 800px !important; 
+                width: 100% !important; 
                 margin: 0 auto;
                 position: relative; 
+            }
+            #print-container > div {
+                width: 100% !important;
+                padding: 0 !important;
             }
             @page { 
                 size: A4 portrait; 
@@ -58,7 +61,7 @@
 <body class="bg-gray-50 text-gray-800 font-sans min-h-[100dvh] relative flex flex-col">
 
     <!-- Wrapper Header & Nav supaya menempel di atas (Sticky) saat di-scroll -->
-    <div class="sticky top-0 z-[60] w-full flex flex-col shadow-md">
+    <div id="app-header-nav" class="sticky top-0 z-[60] w-full flex flex-col shadow-md">
         
         <!-- Top Header -->
         <header class="bg-white px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100 shrink-0">
@@ -161,7 +164,7 @@
     </div>
 
     <!-- Main Content Area -->
-    <main class="flex-1 p-4 md:p-8 pb-32 bg-gray-50/50 w-full relative">
+    <main id="app-main" class="flex-1 p-4 md:p-8 pb-32 bg-gray-50/50 w-full relative">
         
         <!-- Notifikasi Container -->
         <div id="toast-container" class="fixed top-32 right-4 md:right-8 z-[100] flex flex-col space-y-3 pointer-events-none"></div>
@@ -2090,11 +2093,11 @@
             
             // DESAIN BARU: Kop Surat, A4 Format, Tabel Profesional
             printContainer.innerHTML = `
-                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 20mm; box-sizing: border-box; position: relative;">
+                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; width: 100%; max-width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 20mm; box-sizing: border-box; position: relative;">
                     
                     <!-- HEADER / KOP SURAT -->
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo" style="height: 60px; object-fit: contain; margin-bottom: 10px;" />
+                        <img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo" class="w-full h-full object-contain" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
                         <h1 style="margin: 0; font-size: 20px; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 1px;">Cabin Service Report Form</h1>
                         <h2 style="margin: 4px 0; font-size: 16px; font-weight: 600; color: #334155;">Transwisata Prima Aviation</h2>
                         <h3 style="margin: 0; font-size: 13px; font-weight: 500; color: #64748b;">Operation Division</h3>
