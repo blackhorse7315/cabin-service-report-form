@@ -41,7 +41,7 @@
             body { background: white; min-width: 800px !important; margin: 0; padding: 0; }
             /* Hide the sticky header wrapper and main content during print */
             #header-nav-wrapper, body > main { display: none !important; }
-            #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #toast-container { display: none !important; }
+            #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #form-no-modal, #toast-container { display: none !important; }
             
             #print-container { 
                 display: block !important; 
@@ -168,7 +168,7 @@
         <div id="toast-container" class="fixed top-32 right-4 md:right-8 z-[100] flex flex-col space-y-3 pointer-events-none"></div>
 
         <!-- ================= ADMIN PANEL / MENU AKSES ADMIN ================= -->
-        <div id="admin-panel" class="tab-content max-w-4xl mx-auto">
+        <div id="admin-panel" class="tab-content max-w-5xl mx-auto">
             
             <!-- VIEW: LOGIN -->
             <div id="admin-login-view" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden max-w-md mx-auto mt-10">
@@ -218,7 +218,9 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            
+                            <!-- Integrasi Google Sheets -->
                             <div class="border border-gray-200 rounded-2xl p-6 hover:shadow-md transition-all hover:border-blue-300">
                                 <h3 class="text-base font-bold text-gray-800 mb-2 flex items-center"><i data-lucide="server" class="w-5 h-5 mr-2 text-blue-600"></i> Integrasi Google Sheets</h3>
                                 <p class="text-sm text-gray-500 mb-5 min-h-[40px]">Kelola URL Web App dari Google Apps Script untuk menghubungkan data Anda ke cloud.</p>
@@ -227,13 +229,24 @@
                                 </button>
                             </div>
 
-                            <div class="border border-red-100 rounded-2xl p-6 hover:shadow-md transition-all bg-red-50/30 hover:border-red-300">
+                            <!-- Form No Setting -->
+                            <div class="border border-gray-200 rounded-2xl p-6 hover:shadow-md transition-all hover:border-purple-300">
+                                <h3 class="text-base font-bold text-gray-800 mb-2 flex items-center"><i data-lucide="file-digit" class="w-5 h-5 mr-2 text-purple-600"></i> Pengaturan Form No</h3>
+                                <p class="text-sm text-gray-500 mb-5 min-h-[40px]">Atur Form No untuk Google Sheets (Sheet Baru) & Hasil PDF Laporan Anda.</p>
+                                <button onclick="openFormNoModal()" class="w-full bg-purple-50 text-purple-700 font-semibold py-2.5 rounded-xl hover:bg-purple-100 transition-colors border border-purple-200 shadow-sm flex items-center justify-center">
+                                    <i data-lucide="edit-3" class="w-4 h-4 mr-2"></i> Atur Form No
+                                </button>
+                            </div>
+
+                            <!-- Hard Reset -->
+                            <div class="border border-red-100 rounded-2xl p-6 hover:shadow-md transition-all bg-red-50/30 hover:border-red-300 lg:col-span-1 md:col-span-2">
                                 <h3 class="text-base font-bold text-red-700 mb-2 flex items-center"><i data-lucide="alert-triangle" class="w-5 h-5 mr-2 text-red-600"></i> Hard Reset / Factory</h3>
-                                <p class="text-sm text-gray-500 mb-5 min-h-[40px]">Menghapus secara paksa seluruh Cache Data Lokal. Gunakan ini jika data di PC error/tersendat!</p>
+                                <p class="text-sm text-gray-500 mb-5 min-h-[40px]">Menghapus secara paksa seluruh Cache Data Lokal. Gunakan jika data error/tersendat!</p>
                                 <button onclick="factoryReset()" class="w-full bg-white text-red-600 font-semibold py-2.5 rounded-xl hover:bg-red-50 transition-colors border border-red-200 shadow-sm flex items-center justify-center">
                                     <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> Clear Local Storage
                                 </button>
                             </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -938,6 +951,28 @@
             </div>
         </div>
 
+        <!-- Modal for Form No (NEW) -->
+        <div id="form-no-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col transform transition-all overflow-hidden">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800 flex items-center"><i data-lucide="file-digit" class="w-5 h-5 mr-2 text-purple-600"></i> Pengaturan Form No</h3>
+                    <button type="button" onclick="closeFormNoModal()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="bg-purple-50 text-purple-700 text-xs p-3 rounded-lg border border-purple-100 mb-4 leading-relaxed">
+                        <i data-lucide="info" class="w-4 h-4 inline-block mb-0.5 mr-1"></i> Form No yang disimpan di sini akan muncul pada Header PDF dan ikut terkirim ke Google Sheets sebagai <code>data.formNo</code> untuk pembuatan Sheet baru.
+                    </div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Formulir (Form No)</label>
+                    <input type="text" id="form-no-input" class="w-full rounded-xl border-gray-300 border p-3 focus:ring-2 focus:ring-purple-500 outline-none mb-4 text-sm font-medium uppercase" placeholder="Contoh: FM-OPS-001">
+                    <button type="button" onclick="saveFormNo()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-xl transition-colors shadow-md flex justify-center items-center">
+                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Form No
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal for Report Details Responsif -->
         <div id="detail-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-2 md:p-4">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90dvh] flex flex-col transform transition-all scale-100 overflow-hidden">
@@ -973,7 +1008,8 @@
                 { id: 1, name: "Galley" },
                 { id: 2, name: "Lavatory A" },
                 { id: 3, name: "Passenger Seat" }
-            ]
+            ],
+            formNo: "" // Variabel baru untuk menampung Form No
         };
 
         let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
@@ -991,6 +1027,12 @@
 
         if (!appState.cabinPositions || !Array.isArray(appState.cabinPositions)) {
             appState.cabinPositions = defaultState.cabinPositions;
+            saveStateLocal();
+        }
+
+        // Antisipasi jika state lama belum memiliki property formNo
+        if (appState.formNo === undefined) {
+            appState.formNo = defaultState.formNo;
             saveStateLocal();
         }
         
@@ -1098,6 +1140,10 @@
                     appState.passengers = result.passengers || [];
                     appState.cabinPositions = (result.cabinPositions && result.cabinPositions.length > 0) ? result.cabinPositions : appState.cabinPositions;
                     
+                    if (result.formNo !== undefined) {
+                        appState.formNo = result.formNo;
+                    }
+                    
                     saveStateLocal();
                     showToast("Database berhasil di-sync dari Google Sheets", "success");
                     setSyncBtn('success');
@@ -1142,7 +1188,6 @@
                 clearTimeout(timeoutId);
                 console.warn("Push/Fetch Error:", e);
                 setSyncBtn('error');
-                // Tampilkan pesan error pasti dari Server jika Google Sheets menolak
                 showToast("Sync Gagal: " + e.message, "error");
             }
         }
@@ -1265,6 +1310,24 @@
             } else {
                 showToast("URL tidak boleh kosong!", "error");
             }
+        }
+
+        // Logic Modal Form No
+        function openFormNoModal() {
+            document.getElementById('form-no-input').value = appState.formNo || '';
+            document.getElementById('form-no-modal').classList.remove('hidden');
+        }
+
+        function closeFormNoModal() {
+            document.getElementById('form-no-modal').classList.add('hidden');
+        }
+
+        function saveFormNo() {
+            const formNoVal = document.getElementById('form-no-input').value.trim();
+            appState.formNo = formNoVal;
+            saveState(); // Update JSON lalu kirim ke GAS otomatis
+            closeFormNoModal();
+            showToast("Form No berhasil disimpan!", "success");
         }
 
         let currentSelectedPax = []; 
@@ -1450,7 +1513,6 @@
                 </div>
             `;
             
-            // PERBAIKAN: Jika form kosong baru ditaruh di paling atas, jika sedang Load Edit ditaruh berurutan di bawah
             if (existingDoc === null) {
                 container.insertAdjacentHTML('afterbegin', html);
             } else {
@@ -1461,7 +1523,6 @@
             docIndexCounter++;
         }
 
-        // Kompresi Gambar Menggunakan Canvas agar lolos dari Limit 50k Sheet Google
         function handleImageUpload(event, index) {
             const file = event.target.files[0];
             if (file) {
@@ -1473,7 +1534,6 @@
                         let width = img.width;
                         let height = img.height;
                         
-                        // Ekstra Kompresi: Resolusi maksimal 250px agar payload Base64 sangat ringan (Aman untuk G-Sheet)
                         const MAX_DIMENSION = 250;
                         if (width > height && width > MAX_DIMENSION) {
                             height = Math.round((height * MAX_DIMENSION) / width);
@@ -1488,7 +1548,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Ekstra Kompresi: Kualitas gambar 20%
                         const compressedB64 = canvas.toDataURL('image/jpeg', 0.2);
                         
                         const previewImg = document.getElementById(`preview-${index}`);
@@ -1723,18 +1782,16 @@
                 }
             });
 
-            // PERBAIKAN: Gunakan .trim() untuk membersihkan spasi dari keyboard hp
             const selectedCabinName = document.getElementById('report-cabin-name').value.trim();
             const selectedCrew = appState.cabinCrew.find(c => c && c.name.trim().toLowerCase() === selectedCabinName.toLowerCase());
             let cabinSignUrl = selectedCrew ? selectedCrew.signUrl : '';
             
-            // Format URL sejak awal disubmit agar seragam
             cabinSignUrl = getSafeImageUrl(cabinSignUrl);
 
             const newReport = {
                 id: editId ? parseInt(editId) : Date.now(),
                 cabinName: selectedCabinName,
-                cabinSignUrl: cabinSignUrl, // Simpan URL signature langsung ke dalam laporan
+                cabinSignUrl: cabinSignUrl, 
                 startDuty: start,
                 endDuty: end,
                 duration: document.getElementById('report-duration').value,
@@ -1765,7 +1822,7 @@
                 showToast("Report submitted successfully!");
             }
             
-            saveState(); // Simpan ke local dan otomatis jalankan Push (syncData) ke Google Sheets
+            saveState(); 
             resetForm();
             switchTab('history');
         }
@@ -1831,7 +1888,7 @@
                 saveState(); 
                 
                 showToast("Report deleted successfully!");
-                renderHistoryTable(); // Refresh UI
+                renderHistoryTable(); 
             }
         }
 
@@ -1840,7 +1897,6 @@
             const report = appState.reports.find(r => r && r.id == id);
             if (!report) return;
 
-            // PERBAIKAN: Deteksi ketat jika signUrl kosong, cari ulang menggunakan .trim()
             let signUrl = report.cabinSignUrl;
             if (!signUrl || signUrl.trim() === '' || signUrl === '#') {
                 const reportName = (report.cabinName || '').trim().toLowerCase();
@@ -1848,7 +1904,6 @@
                 signUrl = crew && crew.signUrl ? crew.signUrl : '#';
             }
             
-            // Format ulang link agar terhindar dari block CORS browser
             signUrl = getSafeImageUrl(signUrl);
 
             const content = document.getElementById('modal-content');
@@ -1992,12 +2047,10 @@
 
             resetForm(); 
 
-            // ID dibiarkan KOSONG agar tersimpan sebagai laporan baru (bukan ditimpa)
             document.getElementById('edit-report-id').value = '';
             document.getElementById('form-report-title').innerText = 'Duplicate Duty Report';
             document.getElementById('form-submit-text').innerText = 'Submit Duplicated Report';
 
-            // Salin seluruh isi data
             document.getElementById('report-cabin-name').value = report.cabinName || '';
             document.getElementById('report-start-duty').value = report.startDuty || '';
             document.getElementById('report-end-duty').value = report.endDuty || '';
@@ -2022,7 +2075,6 @@
             document.getElementById('report-conclusion').value = report.conclusion || '';
             document.getElementById('report-allowance').value = report.allowance || '';
 
-            // Salin foto dokumentasi
             document.getElementById('docs-container').innerHTML = '';
             if (report.documentation && Array.isArray(report.documentation) && report.documentation.length > 0) {
                 report.documentation.forEach(doc => addDocField(doc));
@@ -2080,7 +2132,6 @@
             const report = appState.reports.find(r => r && r.id == id);
             if (!report) return;
 
-            // PERBAIKAN LOGIKA YANG SAMA PADA PRINT PDF
             let signUrl = report.cabinSignUrl;
             if (!signUrl || signUrl.trim() === '' || signUrl === '#') {
                 const reportName = (report.cabinName || '').trim().toLowerCase();
@@ -2100,12 +2151,16 @@
             printContainer.innerHTML = `
                 <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 5mm 20mm 20mm 20mm; box-sizing: border-box; position: relative;">
                     
-                    <!-- HEADER / KOP SURAT -->
-                    <div style="text-align: center; margin-bottom: 20px;">
+                    <!-- HEADER / KOP SURAT (Dengan Form No dikanan bawah) -->
+                    <div style="text-align: center; margin-bottom: 20px; position: relative;">
                         <img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo" style="height: 60px; display: block; margin: 0 auto 10px auto; object-fit: contain;" />
                         <h1 style="margin: 0; font-size: 20px; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 1px;">Cabin Service Report Form</h1>
                         <h2 style="margin: 4px 0; font-size: 16px; font-weight: 600; color: #334155;">Transwisata Prima Aviation</h2>
                         <h3 style="margin: 0; font-size: 13px; font-weight: 500; color: #64748b;">Operation Division</h3>
+                        
+                        <div style="position: absolute; right: 0; bottom: 0; text-align: right; font-size: 10px; color: #64748b; font-weight: 600; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc;">
+                            Form No: ${appState.formNo || '-'}
+                        </div>
                     </div>
 
                     <!-- ELEGANT HORIZONTAL LINE -->
@@ -2243,40 +2298,34 @@
                 id: Date.now(), 
                 name: document.getElementById('new-cabin-name').value, 
                 email: document.getElementById('new-cabin-email').value,
-                // Langsung bersihkan dan format URL saat disimpan
                 signUrl: getSafeImageUrl(document.getElementById('new-cabin-sign').value)
             });
             saveState(); 
             document.getElementById('new-cabin-name').value = ''; 
             document.getElementById('new-cabin-email').value = ''; 
             document.getElementById('new-cabin-sign').value = '';
-            processSignatureUrl('new-cabin-sign', 'new-sign-preview'); // Reset preview
+            processSignatureUrl('new-cabin-sign', 'new-sign-preview'); 
             showToast("Cabin Crew ditambahkan & tersinkronisasi!");
         }
 
-        // Fungsi pintar untuk mendeteksi tag <img> atau link Google Drive dan mengekstrak/convert URL-nya
         function processSignatureUrl(inputId, previewId) {
             const input = document.getElementById(inputId);
             const preview = document.getElementById(previewId);
             const icon = preview.nextElementSibling;
             let val = input.value.trim();
 
-            // 1. Cek menggunakan regex jika pengguna mem-paste tag <img src="...">
             const imgTagMatch = val.match(/<img[^>]+src=["']([^"']+)["']/i);
             if (imgTagMatch && imgTagMatch[1]) {
                 val = imgTagMatch[1].trim(); 
             }
 
-            // 2. Format menjadi link yang aman (Thumbnail Google Drive)
             val = getSafeImageUrl(val);
             if (val === '#') val = '';
 
-            // Otomatis timpa nilai input menjadi URL bersih/direct link
             if (input.value !== val) {
                 input.value = val;
             }
 
-            // Tampilkan preview gambar
             if (val) {
                 preview.src = val;
                 preview.classList.remove('hidden');
@@ -2323,7 +2372,7 @@
             document.getElementById('edit-cabin-name').value = crew.name || '';
             document.getElementById('edit-cabin-email').value = crew.email || '';
             document.getElementById('edit-cabin-sign').value = crew.signUrl || '';
-            processSignatureUrl('edit-cabin-sign', 'edit-sign-preview'); // Panggil preview saat modal dibuka
+            processSignatureUrl('edit-cabin-sign', 'edit-sign-preview'); 
             document.getElementById('edit-cabin-modal').classList.remove('hidden');
         }
 
@@ -2336,7 +2385,6 @@
             const id = parseInt(document.getElementById('edit-cabin-id').value);
             const name = document.getElementById('edit-cabin-name').value;
             const email = document.getElementById('edit-cabin-email').value;
-            // Langsung bersihkan dan format URL saat diedit
             const signUrl = getSafeImageUrl(document.getElementById('edit-cabin-sign').value);
 
             const index = appState.cabinCrew.findIndex(c => c && c.id == id);
