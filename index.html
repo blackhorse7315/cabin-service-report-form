@@ -1013,7 +1013,7 @@
         };
 
         let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
-        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxH2CvHOXAjpCnTd71WB9f8lXm1BWWl6IivDahZa0mAm_y4XXSecbffkqacZFp2PBqh/exec';
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwt_GjZGBsLXHa-kuHDpqK5Sh_RO9ipN_GUaYzWR4nYNcgeZw2SnV7pvTMrm4XcRgkE/exec';
         let WEB_APP_URL = localStorage.getItem('aeroDutyWebAppUrl') || DEFAULT_URL;
 
         if (!localStorage.getItem('aeroDutyWebAppUrl')) {
@@ -2017,6 +2017,9 @@
                             <i data-lucide="trash-2" class="w-4 h-4 sm:mr-2"></i> <span class="hidden sm:inline">Delete</span>
                         </button>
                     </div>
+                    <button type="button" onclick="sendEmailReport(${report.id})" class="w-full sm:w-auto justify-center px-4 py-3 sm:py-2.5 bg-emerald-600 text-white border border-transparent rounded-xl hover:bg-emerald-700 font-medium transition-colors shadow-md flex items-center">
+                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Email
+                    </button>
                     <button type="button" onclick="printReportAsPDF(${report.id})" class="w-full sm:w-auto justify-center px-4 py-3 sm:py-2.5 bg-slate-800 text-white border border-transparent rounded-xl hover:bg-slate-900 font-medium transition-colors shadow-md flex items-center">
                         <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Print
                     </button>
@@ -2039,6 +2042,43 @@
                 closeModal();
                 showToast("Report deleted successfully!");
             }
+        }
+
+        // ================= SEND EMAIL FEATURE (NEW) =================
+        function sendEmailReport(id) {
+            const report = appState.reports.find(r => r && r.id == id);
+            if (!report) return;
+
+            // 1. Definisikan list CC email
+            const ccEmails = "operation@pt-twa.co.id,chiefpilotrwtranswisata@gmail.com,chiefpilotfwtranswisata@gmail.com";
+            
+            // 2. Format Subject & Body
+            const subject = encodeURIComponent(`Cabin Service Duty Report - ${report.route || ''} - ${formatDateOnly(report.startDuty)}`);
+            
+            const emailBodyText = `Dear Chief Pilot Fixed Wing,
+
+I hereby send the assignment report Flight Duty VIP route ${report.route || '-'}, date from ${formatDateOnly(report.startDuty)} to ${formatDateOnly(report.endDuty)}. File Attached.
+
+Thank you for your attention.
+
+Best Regards,
+
+Cabin Service On Duty,
+${report.cabinName || '-'}`;
+
+            const body = encodeURIComponent(emailBodyText);
+
+            // 3. Gabungkan menjadi link mailto:
+            // Format: mailto:?cc=alamat@cc.com&subject=Judul&body=Isi Pesan
+            const mailtoLink = `mailto:?cc=${ccEmails}&subject=${subject}&body=${body}`;
+
+            // Munculkan toast peringatan untuk Attach Manual PDF
+            showToast("Aplikasi email dibuka! Harap cetak PDF laporan lalu lampirkan secara manual pada email.", "success");
+            
+            // Eksekusi trigger buka email
+            setTimeout(() => {
+                window.location.href = mailtoLink;
+            }, 500);
         }
 
         function duplicateReport(id) {
