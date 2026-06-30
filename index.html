@@ -38,14 +38,14 @@
 
         /* Print Styles for Native Vector PDF Generation */
         @media print {
-            body { background: white; min-width: 800px !important; margin: 0; padding: 0; }
+            body { background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             /* Hide the sticky header wrapper and main content during print */
             #header-nav-wrapper, body > main { display: none !important; }
             #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #form-no-modal, #toast-container { display: none !important; }
             
             #print-container { 
                 display: block !important; 
-                width: 800px !important; 
+                width: 100% !important; 
                 margin: 0 auto;
                 position: relative; 
             }
@@ -2322,13 +2322,28 @@ ${report.cabinName || '-'}`;
             const originalTitle = document.title;
             document.title = filename;
 
-            setTimeout(() => {
-                window.print();
+            // Handler untuk membersihkan layar SETELAH dialog print selesai/ditutup
+            const afterPrintCleanup = () => {
                 document.title = originalTitle;
                 printContainer.classList.add('hidden');
                 printContainer.innerHTML = ''; 
                 closeModal();
-            }, 100);
+                window.removeEventListener('afterprint', afterPrintCleanup);
+            };
+            window.addEventListener('afterprint', afterPrintCleanup);
+
+            // Memberikan waktu rendering lebih panjang (800ms) untuk engine ponsel merender HTML & CSS ke Canvas
+            setTimeout(() => {
+                window.print();
+                
+                // Fallback khusus browser ponsel lawas yang mungkin tidak support event 'afterprint'
+                // Otomatis menutup layar print dalam waktu 1 menit jika user diam saja.
+                setTimeout(() => {
+                    if (!printContainer.classList.contains('hidden')) {
+                        afterPrintCleanup();
+                    }
+                }, 60000); 
+            }, 800);
         }
 
         // ================= CRUD DATABASES =================
