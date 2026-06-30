@@ -2049,8 +2049,9 @@
             const report = appState.reports.find(r => r && r.id == id);
             if (!report) return;
 
-            // 1. Definisikan list CC email
-            const ccEmails = "operation@pt-twa.co.id,chiefpilotrwtranswisata@gmail.com,chiefpilotfwtranswisata@gmail.com";
+            // 1. Definisikan To dan CC email
+            const toEmail = "chiefpilotfwtranswisata@gmail.com";
+            const ccEmails = "operation@pt-twa.co.id,chiefpilotrwtranswisata@gmail.com";
             
             // 2. Format Subject & Body
             const subject = encodeURIComponent(`Cabin Service Duty Report - ${report.route || ''} - ${formatDateOnly(report.startDuty)}`);
@@ -2069,8 +2070,8 @@ ${report.cabinName || '-'}`;
             const body = encodeURIComponent(emailBodyText);
 
             // 3. Gabungkan menjadi link mailto:
-            // Format: mailto:?cc=alamat@cc.com&subject=Judul&body=Isi Pesan
-            const mailtoLink = `mailto:?cc=${ccEmails}&subject=${subject}&body=${body}`;
+            // Format: mailto:tujuan@email.com?cc=alamat@cc.com&subject=Judul&body=Isi Pesan
+            const mailtoLink = `mailto:${toEmail}?cc=${ccEmails}&subject=${subject}&body=${body}`;
 
             // Munculkan toast peringatan untuk Attach Manual PDF
             showToast("Aplikasi email dibuka! Harap cetak PDF laporan lalu lampirkan secara manual pada email.", "success");
