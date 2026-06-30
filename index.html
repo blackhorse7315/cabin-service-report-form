@@ -39,7 +39,8 @@
         /* Print Styles for Native Vector PDF Generation */
         @media print {
             body { background: white; min-width: 800px !important; margin: 0; padding: 0; }
-            body > header, body > nav, body > main { display: none !important; }
+            /* Hide the sticky header wrapper and main content during print */
+            #header-nav-wrapper, body > main { display: none !important; }
             #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #toast-container { display: none !important; }
             
             #print-container { 
@@ -58,7 +59,7 @@
 <body class="bg-gray-50 text-gray-800 font-sans min-h-[100dvh] relative flex flex-col">
 
     <!-- Wrapper Header & Nav supaya menempel di atas (Sticky) saat di-scroll -->
-    <div class="sticky top-0 z-[60] w-full flex flex-col shadow-md">
+    <div id="header-nav-wrapper" class="sticky top-0 z-[60] w-full flex flex-col shadow-md">
         
         <!-- Top Header -->
         <header class="bg-white px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100 shrink-0">
