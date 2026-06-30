@@ -59,14 +59,10 @@
             
             #print-container { 
                 display: block !important; 
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
                 width: 100% !important; 
                 margin: 0 !important;
                 padding: 0 !important;
                 background: white !important;
-                z-index: 9999 !important;
             }
         }
     </style>
@@ -1028,7 +1024,7 @@
         };
 
         let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
-        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwt_GjZGBsLXHa-kuHDpqK5Sh_RO9ipN_GUaYzWR4nYNcgeZw2SnV7pvTMrm4XcRgkE/exec';
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxH2CvHOXAjpCnTd71WB9f8lXm1BWWl6IivDahZa0mAm_y4XXSecbffkqacZFp2PBqh/exec';
         let WEB_APP_URL = localStorage.getItem('aeroDutyWebAppUrl') || DEFAULT_URL;
 
         if (!localStorage.getItem('aeroDutyWebAppUrl')) {
@@ -2332,37 +2328,51 @@ ${report.cabinName || '-'}`;
                 </div>
             `;
 
-            // 1. Tampilkan container print
+            // Ambil elemen utama untuk disembunyikan sementara (pendekatan terbaik untuk mobile)
+            const mainContent = document.querySelector('main');
+            const headerContent = document.getElementById('header-nav-wrapper');
+
+            // 1. Tampilkan container print & sembunyikan UI utama dari layar
             printContainer.classList.remove('hidden');
+            mainContent.classList.add('hidden');
+            headerContent.classList.add('hidden');
 
-            // 2. PENTING: Tutup modal terlebih dahulu agar tidak mengganggu layout mobile
-            document.getElementById('detail-modal').classList.add('hidden');
-
-            // 3. Paksa scroll ke atas agar print engine mobile merender dari awal halaman
+            // 2. Paksa scroll ke atas agar print engine mobile merender dari awal halaman
             window.scrollTo(0, 0);
 
             const originalTitle = document.title;
             document.title = filename;
 
+            // Fungsi untuk mengembalikan tampilan (Cleanup)
+            let isCleanedUp = false;
             const afterPrintCleanup = () => {
+                if(isCleanedUp) return;
+                isCleanedUp = true;
                 document.title = originalTitle;
+                
+                // Kembalikan DOM seperti semula
                 printContainer.classList.add('hidden');
                 printContainer.innerHTML = ''; 
+                mainContent.classList.remove('hidden');
+                headerContent.classList.remove('hidden');
+                
                 window.removeEventListener('afterprint', afterPrintCleanup);
+                window.removeEventListener('focus', afterPrintCleanup);
             };
-            window.addEventListener('afterprint', afterPrintCleanup);
 
-            // 4. Beri jeda sedikit lebih lama (1000ms) agar engine ponsel selesai merender sebelum pop-up print muncul
+            // 3. Jeda untuk memastikan browser ponsel selesai menggambar tabel ke layar
             setTimeout(() => {
                 window.print();
                 
-                // Fallback jika batal print di browser lawas
-                setTimeout(() => {
-                    if (!printContainer.classList.contains('hidden')) {
-                        afterPrintCleanup();
-                    }
-                }, 60000); 
-            }, 1000);
+                // Event listener untuk mengembalikan layar SETELAH dialog print/save PDF ditutup
+                window.addEventListener('afterprint', afterPrintCleanup);
+                
+                // Fallback khusus iOS Safari / Chrome Android (Ponsel mendeteksi kembalinya fokus ke web)
+                window.addEventListener('focus', afterPrintCleanup);
+                
+                // Safety timeout: kembalikan UI otomatis setelah 3 menit jika event tidak terpicu
+                setTimeout(afterPrintCleanup, 180000); 
+            }, 800);
         }
 
         // ================= CRUD DATABASES =================
