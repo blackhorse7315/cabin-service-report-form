@@ -38,30 +38,15 @@
 
         /* Print Styles for Native Vector PDF Generation */
         @media print {
-            html, body { 
-                background: white !important; 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                width: 100% !important; 
-                height: auto !important; 
-                min-height: auto !important; 
-                overflow: visible !important; 
-                display: block !important; /* Mencegah bug flexbox blank di mobile */
-            }
-            #app-header-nav, #app-main, #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #toast-container { 
-                display: none !important; 
-            }
+            body { background: white; min-width: 800px !important; margin: 0; padding: 0; }
+            body > header, body > nav, body > main { display: none !important; }
+            #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #toast-container { display: none !important; }
             
             #print-container { 
                 display: block !important; 
-                width: 100% !important; 
+                width: 800px !important; 
                 margin: 0 auto;
                 position: relative; 
-                visibility: visible !important;
-            }
-            #print-container > div {
-                width: 100% !important;
-                padding: 0 !important;
             }
             @page { 
                 size: A4 portrait; 
@@ -73,7 +58,7 @@
 <body class="bg-gray-50 text-gray-800 font-sans min-h-[100dvh] relative flex flex-col">
 
     <!-- Wrapper Header & Nav supaya menempel di atas (Sticky) saat di-scroll -->
-    <div id="app-header-nav" class="sticky top-0 z-[60] w-full flex flex-col shadow-md">
+    <div class="sticky top-0 z-[60] w-full flex flex-col shadow-md">
         
         <!-- Top Header -->
         <header class="bg-white px-4 md:px-6 py-3 flex items-center justify-between border-b border-gray-100 shrink-0">
@@ -176,7 +161,7 @@
     </div>
 
     <!-- Main Content Area -->
-    <main id="app-main" class="flex-1 p-4 md:p-8 pb-32 bg-gray-50/50 w-full relative">
+    <main class="flex-1 p-4 md:p-8 pb-32 bg-gray-50/50 w-full relative">
         
         <!-- Notifikasi Container -->
         <div id="toast-container" class="fixed top-32 right-4 md:right-8 z-[100] flex flex-col space-y-3 pointer-events-none"></div>
@@ -991,7 +976,7 @@
         };
 
         let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
-        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzPxY77evzV8mXy0Q_dJPYqxBvEzSaWloFVQ6eePi1x1-XdAbmi1RbFBDcj4PvpBMWs/exec';
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwt_GjZGBsLXHa-kuHDpqK5Sh_RO9ipN_GUaYzWR4nYNcgeZw2SnV7pvTMrm4XcRgkE/exec';
         let WEB_APP_URL = localStorage.getItem('aeroDutyWebAppUrl') || DEFAULT_URL;
 
         if (!localStorage.getItem('aeroDutyWebAppUrl')) {
@@ -1436,7 +1421,7 @@
             const posOptions = getCabinPositionOptions(posValue);
             
             const html = `
-                <div class="doc-item bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative group" id="doc-${docIndexCounter}">
+                <div class="doc-item bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative group mb-4" id="doc-${docIndexCounter}">
                     <button type="button" onclick="document.getElementById('doc-${docIndexCounter}').remove()" class="absolute top-2 right-2 text-red-500 hover:bg-red-50 p-1 rounded-md opacity-50 group-hover:opacity-100 transition-opacity">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
@@ -1463,7 +1448,14 @@
                     </div>
                 </div>
             `;
-            container.insertAdjacentHTML('afterbegin', html);
+            
+            // PERBAIKAN: Jika form kosong baru ditaruh di paling atas, jika sedang Load Edit ditaruh berurutan di bawah
+            if (existingDoc === null) {
+                container.insertAdjacentHTML('afterbegin', html);
+            } else {
+                container.insertAdjacentHTML('beforeend', html);
+            }
+            
             lucide.createIcons();
             docIndexCounter++;
         }
@@ -2105,11 +2097,11 @@
             
             // DESAIN BARU: Kop Surat, A4 Format, Tabel Profesional
             printContainer.innerHTML = `
-                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; width: 100%; max-width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 20mm; box-sizing: border-box; position: relative;">
+                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 20mm; box-sizing: border-box; position: relative;">
                     
                     <!-- HEADER / KOP SURAT -->
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo" class="w-full h-full object-contain" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
+                        <img src="https://lh3.googleusercontent.com/d/1WNcGjsZ9_Fp54xzOl01EYRqM6-wY5Zh7" alt="Logo" style="height: 60px; object-fit: contain; margin-bottom: 10px;" />
                         <h1 style="margin: 0; font-size: 20px; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 1px;">Cabin Service Report Form</h1>
                         <h2 style="margin: 4px 0; font-size: 16px; font-weight: 600; color: #334155;">Transwisata Prima Aviation</h2>
                         <h3 style="margin: 0; font-size: 13px; font-weight: 500; color: #64748b;">Operation Division</h3>
@@ -2216,9 +2208,9 @@
                     ` : ''}
 
                     <!-- SIGNATURE -->
-                    <div style="margin-top: 40px; padding-top: 20px; text-align: right; width: 100%; page-break-inside: avoid;">
+                    <div style="margin-top: 40px; padding-top: 20px; text-align: right; page-break-inside: avoid;">
                         <p style="font-size: 11px; margin-bottom: 10px; color: #64748b;">Verified By,</p>
-                        ${signUrl !== '#' && signUrl !== '' ? `<img src="${signUrl}" style="display: block; margin-left: auto; margin-right: 0; max-height: 70px; max-width: 180px; object-fit: contain; mix-blend-mode: multiply; margin-bottom: 5px;" onerror="this.onerror=null; this.outerHTML='<div style=\\'color:red; font-size:10px; height:70px; display:flex; align-items:center; justify-content:flex-end;\\'>[Gagal Muat URL]</div>';">` : '<div style="height: 70px; display: flex; align-items: center; justify-content: flex-end; color: #94a3b8; font-size: 10px;">[No Signature]</div>'}
+                        ${signUrl !== '#' && signUrl !== '' ? `<img src="${signUrl}" style="max-height: 70px; max-width: 180px; mix-blend-mode: multiply; margin-bottom: 5px;" onerror="this.onerror=null; this.outerHTML='<div style=\\'color:red; font-size:10px; height:70px; display:flex; align-items:center; justify-content:flex-end;\\'>[Gagal Muat URL]</div>';">` : '<div style="height: 70px; display: flex; align-items: center; justify-content: flex-end; color: #94a3b8; font-size: 10px;">[No Signature]</div>'}
                         <p style="font-size: 13px; font-weight: bold; margin: 0; color: #0f172a; text-decoration: underline;">${report.cabinName || '-'}</p>
                         <p style="font-size: 11px; color: #64748b; margin: 4px 0;">Cabin Crew / Transwisata Prima Aviation</p>
                     </div>
@@ -2231,32 +2223,13 @@
             const originalTitle = document.title;
             document.title = filename;
 
-            // PERBAIKAN TIMING: Memberi waktu (800ms) untuk peramban mobile (iOS/Android) 
-            // agar bisa me-render konten PDF dengan sempurna sebelum membuka dialog Print
             setTimeout(() => {
                 window.print();
-                
-                // Gunakan event standar HTML5 onafterprint untuk membersihkan
-                // Ini memastikan container hanya dihapus SETELAH user menutup dialog PDF
-                window.onafterprint = () => {
-                    document.title = originalTitle;
-                    printContainer.classList.add('hidden');
-                    printContainer.innerHTML = ''; 
-                    closeModal(); // Tutup juga modalnya
-                    window.onafterprint = null; 
-                };
-
-                // Fallback Timer Darurat (Bila HP lawas gagal memicu onafterprint)
-                setTimeout(() => {
-                    document.title = originalTitle;
-                    if (!printContainer.classList.contains('hidden')) {
-                        printContainer.classList.add('hidden');
-                        printContainer.innerHTML = ''; 
-                        closeModal();
-                    }
-                }, 5000); 
-
-            }, 800); 
+                document.title = originalTitle;
+                printContainer.classList.add('hidden');
+                printContainer.innerHTML = ''; 
+                closeModal();
+            }, 100);
         }
 
         // ================= CRUD DATABASES =================
