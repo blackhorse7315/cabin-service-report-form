@@ -38,20 +38,35 @@
 
         /* Print Styles for Native Vector PDF Generation */
         @media print {
-            body { background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            /* Hide the sticky header wrapper and main content during print */
-            #header-nav-wrapper, body > main { display: none !important; }
-            #detail-modal, #pax-selector-modal, #quick-add-pax-modal, #edit-pax-modal, #edit-cabin-modal, #edit-aircraft-modal, #settings-modal, #form-no-modal, #toast-container { display: none !important; }
+            @page { 
+                size: A4 portrait; 
+                margin: 5mm; 
+            }
+            html, body { 
+                background: white !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            }
+            /* Sembunyikan elemen UI utama secara absolut */
+            #header-nav-wrapper, main, #toast-container, #detail-modal { 
+                display: none !important; 
+            }
             
             #print-container { 
                 display: block !important; 
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
                 width: 100% !important; 
-                margin: 0 auto;
-                position: relative; 
-            }
-            @page { 
-                size: A4 portrait; 
-                margin: 5mm 10mm; 
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                z-index: 9999 !important;
             }
         }
     </style>
@@ -2190,7 +2205,7 @@ ${report.cabinName || '-'}`;
             
             // DESAIN BARU: Kop Surat, A4 Format, Tabel Profesional
             printContainer.innerHTML = `
-                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 5mm 20mm 20mm 20mm; box-sizing: border-box; position: relative;">
+                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; width: 100%; max-width: 210mm; margin: 0 auto; background: white; padding: 5mm 15mm; box-sizing: border-box; position: relative;">
                     
                     <!-- HEADER / KOP SURAT (Dengan Form No dikanan bawah) -->
                     <div style="text-align: center; margin-bottom: 20px; position: relative;">
@@ -2317,33 +2332,37 @@ ${report.cabinName || '-'}`;
                 </div>
             `;
 
+            // 1. Tampilkan container print
             printContainer.classList.remove('hidden');
+
+            // 2. PENTING: Tutup modal terlebih dahulu agar tidak mengganggu layout mobile
+            document.getElementById('detail-modal').classList.add('hidden');
+
+            // 3. Paksa scroll ke atas agar print engine mobile merender dari awal halaman
+            window.scrollTo(0, 0);
 
             const originalTitle = document.title;
             document.title = filename;
 
-            // Handler untuk membersihkan layar SETELAH dialog print selesai/ditutup
             const afterPrintCleanup = () => {
                 document.title = originalTitle;
                 printContainer.classList.add('hidden');
                 printContainer.innerHTML = ''; 
-                closeModal();
                 window.removeEventListener('afterprint', afterPrintCleanup);
             };
             window.addEventListener('afterprint', afterPrintCleanup);
 
-            // Memberikan waktu rendering lebih panjang (800ms) untuk engine ponsel merender HTML & CSS ke Canvas
+            // 4. Beri jeda sedikit lebih lama (1000ms) agar engine ponsel selesai merender sebelum pop-up print muncul
             setTimeout(() => {
                 window.print();
                 
-                // Fallback khusus browser ponsel lawas yang mungkin tidak support event 'afterprint'
-                // Otomatis menutup layar print dalam waktu 1 menit jika user diam saja.
+                // Fallback jika batal print di browser lawas
                 setTimeout(() => {
                     if (!printContainer.classList.contains('hidden')) {
                         afterPrintCleanup();
                     }
                 }, 60000); 
-            }, 800);
+            }, 1000);
         }
 
         // ================= CRUD DATABASES =================
