@@ -36,6 +36,17 @@
             scrollbar-width: none;
         }
 
+        /* Hack Khusus Layar HP: Render print container di balik layar sebelum dicetak agar gambar termuat */
+        @media screen {
+            #print-container:not(.hidden) {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+                opacity: 0;
+                z-index: -10;
+            }
+        }
+
         /* Print Styles for Native Vector PDF Generation */
         @media print {
             @page { 
@@ -52,13 +63,15 @@
                 -webkit-print-color-adjust: exact !important; 
                 print-color-adjust: exact !important; 
             }
-            /* Sembunyikan elemen UI utama secara absolut */
+            /* CSS ini yang bertugas menyembunyikan aplikasi saat print, BUKAN JavaScript! */
             #header-nav-wrapper, main, #toast-container, #detail-modal { 
                 display: none !important; 
             }
             
             #print-container { 
                 display: block !important; 
+                position: static !important;
+                opacity: 1 !important;
                 width: 100% !important; 
                 margin: 0 !important;
                 padding: 0 !important;
@@ -2328,49 +2341,55 @@ ${report.cabinName || '-'}`;
                 </div>
             `;
 
-            // Ambil elemen utama untuk disembunyikan sementara (pendekatan terbaik untuk mobile)
-            const mainContent = document.querySelector('main');
-            const headerContent = document.getElementById('header-nav-wrapper');
-
-            // 1. Tampilkan container print & sembunyikan UI utama dari layar
+            // 1. Tampilkan container print (CSS screen akan menyembunyikannya dari pandangan mata)
             printContainer.classList.remove('hidden');
-            mainContent.classList.add('hidden');
-            headerContent.classList.add('hidden');
 
-            // 2. Paksa scroll ke atas agar print engine mobile merender dari awal halaman
+            // PENTING: JANGAN MENGGUNAKAN JS UNTUK HIDE 'mainContent' / 'headerContent'! 
+            // Ini penyebab stuck putih di Safari iOS. Biarkan CSS @media print yang mengeksekusinya.
+
+            // 2. Sembunyikan modal sementara karena Safari ngelag jika print halaman yg ada CSS Fixed
+            document.getElementById('detail-modal').classList.add('hidden');
+
+            // 3. Paksa scroll ke atas
             window.scrollTo(0, 0);
 
             const originalTitle = document.title;
             document.title = filename;
 
-            // Fungsi untuk mengembalikan tampilan (Cleanup)
+            // Fungsi untuk mengembalikan tampilan Modal (Cleanup)
             let isCleanedUp = false;
             const afterPrintCleanup = () => {
                 if(isCleanedUp) return;
                 isCleanedUp = true;
                 document.title = originalTitle;
                 
-                // Kembalikan DOM seperti semula
                 printContainer.classList.add('hidden');
                 printContainer.innerHTML = ''; 
-                mainContent.classList.remove('hidden');
-                headerContent.classList.remove('hidden');
+                
+                // Kembalikan modal
+                document.getElementById('detail-modal').classList.remove('hidden');
                 
                 window.removeEventListener('afterprint', afterPrintCleanup);
                 window.removeEventListener('focus', afterPrintCleanup);
+                document.removeEventListener('touchstart', afterPrintCleanup);
             };
 
-            // 3. Jeda untuk memastikan browser ponsel selesai menggambar tabel ke layar
+            // 4. Jeda untuk memuat gambar background, kemudian panggil Print
             setTimeout(() => {
                 window.print();
                 
-                // Event listener untuk mengembalikan layar SETELAH dialog print/save PDF ditutup
+                // Pendeteksi selesai print
                 window.addEventListener('afterprint', afterPrintCleanup);
-                
-                // Fallback khusus iOS Safari / Chrome Android (Ponsel mendeteksi kembalinya fokus ke web)
                 window.addEventListener('focus', afterPrintCleanup);
                 
-                // Safety timeout: kembalikan UI otomatis setelah 3 menit jika event tidak terpicu
+                // FALLBACK iOS SUPER AMAN: 
+                // Jika Safari nge-bug dan event di atas tidak memicu, 
+                // sentuhan layar pertama pengguna saat kembali ke web akan mere-load modal.
+                setTimeout(() => {
+                    document.addEventListener('touchstart', afterPrintCleanup, {once: true});
+                }, 1000);
+
+                // Auto reset setelah 3 Menit
                 setTimeout(afterPrintCleanup, 180000); 
             }, 800);
         }
