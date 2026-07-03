@@ -626,7 +626,7 @@
                     <form onsubmit="handleAddAircraft(event)" class="flex flex-col md:flex-row gap-4 items-end">
                         <div class="flex-1 w-full">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Registration</label>
-                            <input type="text" id="new-ac-reg" required placeholder="e.g. PK-GIA" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-purple-500 outline-none uppercase">
+                            <input type="text" id="new-ac-reg" required placeholder="e.g. PK-GIA" class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-purple-500 outline-none">
                         </div>
                         <div class="flex-1 w-full">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Aircraft Type</label>
@@ -939,7 +939,7 @@
                         <input type="hidden" id="edit-aircraft-id">
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Registration</label>
-                            <input type="text" id="edit-aircraft-reg" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm uppercase">
+                            <input type="text" id="edit-aircraft-reg" required class="w-full rounded-xl border-gray-200 border p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         </div>
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Aircraft Type</label>
@@ -1037,7 +1037,7 @@
         };
 
         let appState = JSON.parse(localStorage.getItem('aeroDutyState3'));
-        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxH2CvHOXAjpCnTd71WB9f8lXm1BWWl6IivDahZa0mAm_y4XXSecbffkqacZFp2PBqh/exec';
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwt_GjZGBsLXHa-kuHDpqK5Sh_RO9ipN_GUaYzWR4nYNcgeZw2SnV7pvTMrm4XcRgkE/exec';
         let WEB_APP_URL = localStorage.getItem('aeroDutyWebAppUrl') || DEFAULT_URL;
 
         if (!localStorage.getItem('aeroDutyWebAppUrl')) {
@@ -1558,7 +1558,8 @@
                         let width = img.width;
                         let height = img.height;
                         
-                        const MAX_DIMENSION = 250;
+                        // PERBAIKAN: Meningkatkan dimensi batas dari 250px menjadi 600px agar gambar lebih tajam
+                        const MAX_DIMENSION = 600; 
                         if (width > height && width > MAX_DIMENSION) {
                             height = Math.round((height * MAX_DIMENSION) / width);
                             width = MAX_DIMENSION;
@@ -1572,7 +1573,8 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        const compressedB64 = canvas.toDataURL('image/jpeg', 0.2);
+                        // PERBAIKAN: Meningkatkan kualitas kompresi JPEG dari 0.2 (20%) menjadi 0.6 (60%)
+                        const compressedB64 = canvas.toDataURL('image/jpeg', 0.6);
                         
                         const previewImg = document.getElementById(`preview-${index}`);
                         const container = document.getElementById(`preview-container-${index}`);
@@ -1717,7 +1719,8 @@
             if(acSelect && appState.aircrafts && Array.isArray(appState.aircrafts)) {
                 acSelect.innerHTML = '<option value="">-- Select Aircraft --</option>';
                 appState.aircrafts.forEach(ac => { 
-                    if(ac && ac.reg) acSelect.innerHTML += `<option value="${ac.reg}">${ac.reg} (${ac.type || '-'})</option>`; 
+                    // PERUBAHAN: Menghapus tipe pesawat dari dropdown. Hanya menampilkan registrasi aslinya.
+                    if(ac && ac.reg) acSelect.innerHTML += `<option value="${ac.reg}">${ac.reg}</option>`; 
                 });
             }
         }
@@ -2068,16 +2071,13 @@
             }
         }
 
-        // ================= SEND EMAIL FEATURE (NEW) =================
+        // ================= SEND EMAIL FEATURE =================
         function sendEmailReport(id) {
             const report = appState.reports.find(r => r && r.id == id);
             if (!report) return;
 
-            // 1. Definisikan To dan CC email
             const toEmail = "chiefpilotfwtranswisata@gmail.com";
             const ccEmails = "operation@pt-twa.co.id,chiefpilotrwtranswisata@gmail.com";
-            
-            // 2. Format Subject & Body
             const subject = encodeURIComponent(`Cabin Service Duty Report - ${report.route || ''} - ${formatDateOnly(report.startDuty)}`);
             
             const emailBodyText = `Dear Chief Pilot Fixed Wing,
@@ -2093,14 +2093,11 @@ ${report.cabinName || '-'}`;
 
             const body = encodeURIComponent(emailBodyText);
 
-            // 3. Gabungkan menjadi link mailto:
-            // Format: mailto:tujuan@email.com?cc=alamat@cc.com&subject=Judul&body=Isi Pesan
+            // Trigger mailto client
             const mailtoLink = `mailto:${toEmail}?cc=${ccEmails}&subject=${subject}&body=${body}`;
 
-            // Munculkan toast peringatan untuk Attach Manual PDF
             showToast("Aplikasi email dibuka! Harap cetak PDF laporan lalu lampirkan secara manual pada email.", "success");
             
-            // Eksekusi trigger buka email
             setTimeout(() => {
                 window.location.href = mailtoLink;
             }, 500);
@@ -2344,9 +2341,6 @@ ${report.cabinName || '-'}`;
             // 1. Tampilkan container print (CSS screen akan menyembunyikannya dari pandangan mata)
             printContainer.classList.remove('hidden');
 
-            // PENTING: JANGAN MENGGUNAKAN JS UNTUK HIDE 'mainContent' / 'headerContent'! 
-            // Ini penyebab stuck putih di Safari iOS. Biarkan CSS @media print yang mengeksekusinya.
-
             // 2. Sembunyikan modal sementara karena Safari ngelag jika print halaman yg ada CSS Fixed
             document.getElementById('detail-modal').classList.add('hidden');
 
@@ -2505,7 +2499,8 @@ ${report.cabinName || '-'}`;
         function handleAddAircraft(e) {
             e.preventDefault();
             if(!appState.aircrafts) appState.aircrafts = [];
-            appState.aircrafts.push({ id: Date.now(), reg: document.getElementById('new-ac-reg').value.toUpperCase(), type: document.getElementById('new-ac-type').value });
+            // PERUBAHAN: Menghapus pemaksaan .toUpperCase() agar registrasi tersimpan persis apa adanya
+            appState.aircrafts.push({ id: Date.now(), reg: document.getElementById('new-ac-reg').value.trim(), type: document.getElementById('new-ac-type').value });
             saveState(); 
             document.getElementById('new-ac-reg').value = ''; document.getElementById('new-ac-type').value = '';
             showToast("Pesawat ditambahkan & tersinkronisasi!");
@@ -2525,7 +2520,8 @@ ${report.cabinName || '-'}`;
                 return `
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">${i + 1}</td>
-                    <td class="px-6 py-4 font-bold text-gray-800 uppercase tracking-wider">${a.reg || '-'}</td>
+                    <!-- PERUBAHAN: Menghapus class 'uppercase' agar teks tidak dipaksa kapital -->
+                    <td class="px-6 py-4 font-bold text-gray-800 tracking-wider">${a.reg || '-'}</td>
                     <td class="px-6 py-4 font-medium text-gray-600">${a.type || '-'}</td>
                     <td class="px-6 py-4 text-center">
                         <button onclick="openEditAircraftModal(${a.id})" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-1.5 rounded mr-2" title="Edit"><i data-lucide="edit-2" class="w-4 h-4 mx-auto"></i></button>
@@ -2554,7 +2550,8 @@ ${report.cabinName || '-'}`;
         function handleUpdateAircraft(e) {
             e.preventDefault();
             const id = parseInt(document.getElementById('edit-aircraft-id').value);
-            const reg = document.getElementById('edit-aircraft-reg').value.toUpperCase();
+            // PERUBAHAN: Menghapus .toUpperCase() agar registrasi disimpan persis seperti yang diketik pengguna
+            const reg = document.getElementById('edit-aircraft-reg').value.trim();
             const type = document.getElementById('edit-aircraft-type').value;
 
             const index = appState.aircrafts.findIndex(a => a && a.id == id);
